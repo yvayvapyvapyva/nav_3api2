@@ -171,7 +171,7 @@ function setMapLocation(center, zoom, azimuth, duration = 400) {
         while (diff > 180) diff -= 360;
         while (diff < -180) diff += 360;
         const finalDeg = curDeg + diff;
-        params.camera = { azimuth: -finalDeg * Math.PI / 180, tilt: APP.lastTilt, duration: 0 };
+        params.camera = { azimuth: -finalDeg * Math.PI / 180, tilt: APP.lastTilt, duration };
     }
     APP.map.update(params);
 }
