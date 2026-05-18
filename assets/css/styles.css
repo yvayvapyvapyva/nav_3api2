@@ -274,6 +274,17 @@ html, body {
     right: 12px;
 }
 
+#tiltBtn {
+    top: calc(114px + env(safe-area-inset-top));
+    left: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+#tiltBtn.active {
+}
+
 #mapTypeBtn.api-v3 {
 }
 
