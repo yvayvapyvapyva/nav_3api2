@@ -85,7 +85,8 @@ const APP = {
     navAudio: new Audio(),
     navConfig: { TRIGGER_DIST: 25, AZ_TOLERANCE: 45, SPEED_THRESHOLD: 2 },
     _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null,
-    _driveActive: false, _driveRaf: null, _driveMarker: null, _driveShowFrom: -1
+    _driveActive: false, _driveRaf: null, _driveMarker: null, _driveShowFrom: -1,
+    _userMarkerEl: null, markerRotation: 0
 };
 
 const $ = id => document.getElementById(id);
@@ -122,6 +123,18 @@ function getUserLocSvg(azimuth = 0) {
             </g>
         </svg>`
     );
+}
+
+function updateUserMarkerRotation() {
+    if (!APP._userMarkerEl || APP.lastAz === null || !APP.map) return;
+    const arrow = APP._userMarkerEl.querySelector('#user-arrow');
+    if (arrow) {
+        const mapAz = (APP.map.azimuth || 0) * (180 / Math.PI);
+        const targetRotation = APP.lastAz + mapAz;
+        let delta = ((targetRotation - APP.markerRotation + 180) % 360) - 180;
+        APP.markerRotation += delta;
+        arrow.setAttribute('transform', `rotate(${APP.markerRotation}, 20, 20)`);
+    }
 }
 
 function calcAzimuth(p1, p2) {
@@ -266,18 +279,15 @@ function initGeolocation() {
         navigator.geolocation.watchPosition(pos => {
             const coords = [pos.coords.latitude, pos.coords.longitude];
             const speed = (pos.coords.speed || 0) * 3.6;
-            if (APP.lastPos && speed >= APP.navConfig.SPEED_THRESHOLD)
+            if (APP.lastPos && speed >= APP.navConfig.SPEED_THRESHOLD) {
                 APP.lastAz = calcAzimuth(APP.lastPos, coords);
+            }
             APP.lastPos = coords;
             APP.currentSpeed = speed;
 
-            if (APP.userMarker) {
-                APP.map.removeChild(APP.userMarker);
-                const el = document.createElement('div');
-                el.style.transform = 'translate(-50%,-50%)';
-                el.innerHTML = `<img src="${getUserLocSvg(APP.lastAz)}" width="40" height="40" />`;
-                APP.userMarker = new ymaps3.YMapMarker({ coordinates: [coords[1], coords[0]] }, el);
-                APP.map.addChild(APP.userMarker);
+            if (APP.userMarker && APP._userMarkerEl) {
+                APP.userMarker.update({ coordinates: [coords[1], coords[0]] });
+                updateUserMarkerRotation();
             }
             $('telSpeed').textContent = Math.round(APP.currentSpeed);
 
@@ -767,8 +777,9 @@ ymaps3.ready.then(async () => {
     } catch (e) {}
 
     const userEl = document.createElement('div');
-    userEl.style.transform = 'translate(-50%,-50%)';
-    userEl.innerHTML = `<img src="${getUserLocSvg(0)}" width="40" height="40" />`;
+    userEl.style.cssText = 'width:40px;height:40px;transform:translate(-50%,-50%);cursor:pointer;';
+    userEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><g id="user-arrow"><path d="M20,4 L32,34 L20,28 L8,34 Z" fill="#FF3B30" stroke="white" stroke-width="2"/></g></svg>';
+    APP._userMarkerEl = userEl;
     APP.userMarker = new YMapMarker({ coordinates: [0, 0] }, userEl);
     APP.map.addChild(APP.userMarker);
     initGeolocation();
@@ -793,6 +804,19 @@ ymaps3.ready.then(async () => {
 
     MenuModule.init(loadRouteFromJSON);
     $('loading').classList.add('hidden');
+
+    let lastMapAzimuth = 0;
+    function trackMapAzimuth() {
+        try {
+            const mapAz = (APP.map.azimuth || 0) * (180 / Math.PI);
+            if (Math.abs(mapAz - lastMapAzimuth) > 0.5) {
+                lastMapAzimuth = mapAz;
+                updateUserMarkerRotation();
+            }
+        } catch (e) {}
+        requestAnimationFrame(trackMapAzimuth);
+    }
+    trackMapAzimuth();
 
     document.addEventListener('click', function activateAudio() {
         APP.navAudio.muted = true;
