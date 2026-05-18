@@ -296,9 +296,9 @@ function initGeolocation() {
             const pi = APP.navPreviewIndex >= 0 ? APP.navPreviewIndex : APP.navCurrentIndex;
             if (APP.autoCenter && APP.map) {
                 if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD && APP.lastAz !== 0) {
-                    setMapLocation(APP.lastPos, undefined, APP.lastAz);
+                    setMapLocation(APP.lastPos, undefined, APP.lastAz, 2000);
                 } else {
-                    setMapLocation(APP.lastPos);
+                    setMapLocation(APP.lastPos, undefined, undefined, 2000);
                 }
             }
             if (APP.navCurrentIndex >= 0 && APP.navPreviewIndex < 0) navCheckTriggers();
@@ -312,9 +312,9 @@ function toggleAutoCenter() {
     if (APP.autoCenter) stopDrive();
     if (APP.autoCenter && APP.lastPos) {
         if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD && APP.lastAz !== 0) {
-            setMapLocation(APP.lastPos, undefined, APP.lastAz);
+            setMapLocation(APP.lastPos, undefined, APP.lastAz, 2000);
         } else {
-            setMapLocation(APP.lastPos);
+            setMapLocation(APP.lastPos, undefined, undefined, 2000);
         }
     }
     showToast(APP.autoCenter ? 'Привязка включена' : 'Привязка отключена');
