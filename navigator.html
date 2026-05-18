@@ -417,13 +417,17 @@ function renderRoutePoints() {
             }
         }
 
-        const map = APP.map;
-        if (map) {
-            map.addChild(placemark);
-            if (line) map.addChild(line);
-        }
         return { ...p, placemark, line, hidden: false };
     });
+
+    const map = APP.map;
+    if (map) {
+        for (let ci = APP.navPoints.length - 1; ci >= 0; ci--) {
+            const pt = APP.navPoints[ci];
+            if (pt.placemark) map.addChild(pt.placemark);
+            if (pt.line) map.addChild(pt.line);
+        }
+    }
     updateHud();
 }
 
