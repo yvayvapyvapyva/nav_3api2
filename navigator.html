@@ -189,7 +189,9 @@ function driveAlongPath(fromIdx) {
 
     APP._driveActive = true;
     const startTime = performance.now();
-    let smoothAz = calcAzimuth(path[0], path[1] || path[0]);
+    let curCamAz = APP.lastAz;
+    try { curCamAz = APP.map.camera.azimuth * 180 / Math.PI; curCamAz = ((curCamAz % 360) + 360) % 360; } catch (e) {}
+    let smoothAz = curCamAz;
     let lastFrameTime = 0;
     const FRAME_INTERVAL = 33;
 
@@ -497,7 +499,7 @@ function showPreview(i) {
     renderRoutePoints();
 
     if (p.lat && p.lon) {
-        setMapLocation([p.lat, p.lon], undefined, p.az);
+        setMapLocation([p.lat, p.lon], undefined, undefined);
     }
 }
 
