@@ -142,10 +142,22 @@ function getGeoDistance(p1, p2) {
     return R * c;
 }
 
-function setMapLocation(center, zoom) {
+function setMapLocation(center, zoom, azimuth) {
     if (!APP.map) return;
-    APP.map.setLocation({ center: [center[1], center[0]], zoom });
+    APP.map.setLocation({ center: [center[1], center[0]], zoom, duration: 400 });
+    if (azimuth !== undefined) {
+        let targetAz = -azimuth * Math.PI / 180;
+        while (targetAz > Math.PI) targetAz -= 2 * Math.PI;
+        while (targetAz < -Math.PI) targetAz += 2 * Math.PI;
+        let curAz;
+        try { curAz = APP.map.camera.azimuth; } catch (e) { curAz = APP.lastAz; }
+        const k = Math.round((curAz - targetAz) / (2 * Math.PI));
+        const S = targetAz + k * 2 * Math.PI;
+        APP.lastAz = S;
+        APP.map.setCamera({ azimuth: S, tilt: Math.PI / 6, duration: 400 });
+    }
 }
+
 
 function fitMapToBounds(bounds, zoomMargin = 80) {
     if (!APP.map || !bounds) return;
@@ -159,12 +171,12 @@ function fitMapToBounds(bounds, zoomMargin = 80) {
     if (maxDiff > 0.5) zoom = 10;
     else if (maxDiff > 0.2) zoom = 11;
     else if (maxDiff > 0.1) zoom = 12;
-    else if (maxDiff > 0.05) zoom = 13;
-    else if (maxDiff > 0.02) zoom = 14;
-    else if (maxDiff > 0.01) zoom = 15;
-    else if (maxDiff > 0.005) zoom = 16;
-    else if (maxDiff > 0.002) zoom = 17;
-    APP.map.setLocation({ center: [centerLon, centerLat], zoom });
+    else if (maxDiff > 0.02) zoom = 13;
+    else if (maxDiff > 0.01) zoom = 14;
+    else if (maxDiff > 0.005) zoom = 15;
+    else if (maxDiff > 0.002) zoom = 16;
+    else if (maxDiff > 0.0005) zoom = 17;
+    APP.map.setLocation({ center: [centerLon, centerLat], zoom, duration: 400 });
 }
 
 function initGeolocation() {
@@ -399,9 +411,23 @@ function showPreview(i) {
             if (pt[1] < minLon) minLon = pt[1];
             if (pt[1] > maxLon) maxLon = pt[1];
         }
-        fitMapToBounds([[minLat, minLon], [maxLat, maxLon]]);
+        const centerLon = (minLon + maxLon) / 2;
+        const centerLat = (minLat + maxLat) / 2;
+        const latDiff = maxLat - minLat;
+        const lonDiff = maxLon - minLon;
+        const maxDiff = Math.max(latDiff, lonDiff);
+        let zoom = 18;
+        if (maxDiff > 0.5) zoom = 10;
+        else if (maxDiff > 0.2) zoom = 11;
+        else if (maxDiff > 0.1) zoom = 12;
+        else if (maxDiff > 0.02) zoom = 13;
+        else if (maxDiff > 0.01) zoom = 14;
+        else if (maxDiff > 0.005) zoom = 15;
+        else if (maxDiff > 0.002) zoom = 16;
+        else if (maxDiff > 0.0005) zoom = 17;
+        setMapLocation([centerLat, centerLon], zoom, p.az);
     } else if (p.lat && p.lon) {
-        setMapLocation([p.lat, p.lon]);
+        setMapLocation([p.lat, p.lon], 17, p.az);
     }
 }
 
