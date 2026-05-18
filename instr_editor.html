@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Инструкция — Редактор маршрутов</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0a0b0f;
+            color: #f5f7fa;
+            line-height: 1.6;
+            padding: 20px;
+            padding-bottom: 40px;
+            -webkit-font-smoothing: antialiased;
+        }
+        h1 { font-size: 24px; font-weight: 700; text-align: center; margin: 20px 0 8px; }
+        .subtitle { text-align: center; color: #8b8f99; font-size: 14px; margin-bottom: 24px; }
+        h2 {
+            font-size: 18px; font-weight: 700; margin: 28px 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        h3 { font-size: 16px; font-weight: 600; margin: 20px 0 8px; color: #30D158; }
+        p { margin: 8px 0; font-size: 15px; color: rgba(255,255,255,0.85); }
+        ul { margin: 8px 0 8px 20px; }
+        li { margin: 6px 0; font-size: 15px; color: rgba(255,255,255,0.85); }
+        .icon-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px;
+            margin: 6px 0;
+        }
+        .icon-row .icon { font-size: 22px; width: 36px; text-align: center; flex-shrink: 0; }
+        .icon-row .desc { flex: 1; }
+        .icon-row .label { font-weight: 600; font-size: 15px; }
+        .icon-row .hint { font-size: 13px; color: #8b8f99; margin-top: 2px; }
+        .color-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            margin: 4px 0;
+        }
+        .swatch { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+        .cmd-list {
+            margin: 2px 0 10px 26px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border-left: 2px solid rgba(255,255,255,0.15);
+        }
+        .cmd-list li {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            margin: 3px 0;
+            list-style: none;
+        }
+        .cmd-list li::before { content: "• "; }
+        hr {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin: 24px 0;
+        }
+        kbd {
+            background: rgba(255,255,255,0.1);
+            border: 0.5px solid rgba(255,255,255,0.15);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .tip {
+            background: rgba(48,209,88,0.08);
+            border-left: 3px solid #30D158;
+            padding: 12px 16px;
+            border-radius: 0 10px 10px 0;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .tip strong { color: #30D158; }
+    </style>
+</head>
+<body>
+    <h1>✏️ Редактор маршрутов</h1>
+    <p class="subtitle">Создание и редактирование маршрутов для навигатора</p>
+
+    <h2>Как это работает</h2>
+    <p>Редактор позволяет создавать маршруты из набора точек. Каждая точка — это место на карте с голосовой командой (например, «На перекрестке повернем налево»), путём (линией на карте) и опциональным комментарием. Маршруты сохраняются в облаке и доступны в навигаторе.</p>
+
+    <h2>Начало работы</h2>
+
+    <div class="icon-row">
+        <div class="icon">📋</div>
+        <div class="desc">
+            <div class="label">Кнопка «Маршруты»</div>
+            <div class="hint">Верхняя центральная кнопка</div>
+        </div>
+    </div>
+    <p>Нажмите <kbd>Маршруты</kbd> — откроется список ваших маршрутов. Здесь можно создать новый, загрузить существующий, изменить его настройки или удалить.</p>
+
+    <div class="icon-row">
+        <div class="icon">➕</div>
+        <div class="desc">
+            <div class="label">Создание маршрута</div>
+            <div class="hint">Кнопка внизу списка маршрутов</div>
+        </div>
+    </div>
+    <p>Нажмите <kbd>➕ Создать новый маршрут</kbd>, введите название. Маршрут будет создан и сразу загружен для редактирования.</p>
+
+    <h2>Редактирование точек</h2>
+
+    <div class="icon-row">
+        <div class="icon">📍</div>
+        <div class="desc">
+            <div class="label">Добавление точки</div>
+            <div class="hint">Кнопка «Добавить новую точку» внизу</div>
+        </div>
+    </div>
+    <p>Нажмите <kbd>Добавить новую точку</kbd>. Откроется форма новой точки — выберите цвет и команду, затем нажмите <kbd>Поставить на карту</kbd> и кликните на карте в нужном месте. Сразу после этого можно рисовать путь точки.</p>
+
+    <div class="icon-row">
+        <div class="icon">✏️</div>
+        <div class="desc">
+            <div class="label">Рисование пути</div>
+            <div class="hint">После установки точки на карту</div>
+        </div>
+    </div>
+    <p>После размещения точки на карте начнётся режим рисования пути. Кликайте на карте, чтобы добавить точки пути. Нажмите <kbd>Завершить рисование пути</kbd>, чтобы закончить. Маршрут будет автоматически сохранён.</p>
+
+    <div class="icon-row">
+        <div class="icon">🌍</div>
+        <div class="desc">
+            <div class="label">GPS-режим</div>
+            <div class="hint">Кнопка рядом с «Добавить точку»</div>
+        </div>
+    </div>
+    <p>При активном режиме рисования появляется кнопка <kbd>🌍</kbd>. Нажмите её, чтобы добавить точку пути по вашему текущему местоположению (полезно, если вы находитесь на месте маршрута).</p>
+
+    <div class="icon-row">
+        <div class="icon">📝</div>
+        <div class="desc">
+            <div class="label">Редактирование точки</div>
+            <div class="hint">Клик на точке на карте или кнопка списка</div>
+        </div>
+    </div>
+    <p>Кликните на существующую точку на карте или нажмите кнопку <kbd>☰</kbd> (список точек) в правом верхнем углу. В открывшемся окне можно изменить цвет, команду, комментарий или удалить точку.</p>
+
+    <div class="icon-row">
+        <div class="icon">🖋️</div>
+        <div class="desc">
+            <div class="label">Изменение пути точки</div>
+            <div class="hint">Кнопка в карточке точки</div>
+        </div>
+    </div>
+    <p>В карточке точки нажмите <kbd>🖋️ Изменить путь</kbd> — откроется режим редактирования линии пути. Добавляйте или перемещайте вершины пути на карте.</p>
+
+    <h2>Управление маршрутом</h2>
+
+    <div class="icon-row">
+        <div class="icon">🗑️</div>
+        <div class="desc">
+            <div class="label">Удаление точки</div>
+            <div class="hint">Кнопка в карточке точки</div>
+        </div>
+    </div>
+    <p>В карточке точки нажмите <kbd>🗑️ Удалить</kbd> — точка будет удалена из маршрута, а изменения сохранены.</p>
+
+    <div class="icon-row">
+        <div class="icon">↕️</div>
+        <div class="desc">
+            <div class="label">Изменение порядка точек</div>
+            <div class="hint">Перетаскивание за ручку ☰</div>
+        </div>
+    </div>
+    <p>В списке точек (кнопка <kbd>☰</kbd>) перетащите точку за ручку <kbd>☰</kbd> в нужное место списка, чтобы изменить порядок прохождения.</p>
+
+    <div class="icon-row">
+        <div class="icon">⚙️</div>
+        <div class="desc">
+            <div class="label">Настройки маршрута</div>
+            <div class="hint">Кнопка ⚙️ рядом с маршрутом в списке</div>
+        </div>
+    </div>
+    <p>В списке маршрутов нажмите <kbd>⚙️</kbd> у нужного маршрута. Можно изменить название, описание, категорию, видимость (публичный/личный), открыть в навигаторе, скопировать ссылку для шаринга или удалить маршрут.</p>
+
+    <div class="icon-row">
+        <div class="icon">🧭</div>
+        <div class="desc">
+            <div class="label">Открыть в навигаторе</div>
+            <div class="hint">Кнопка в настройках маршрута</div>
+        </div>
+    </div>
+    <p>В настройках маршрута нажмите <kbd>🧭 Открыть в навигаторе</kbd> — маршрут откроется в режиме навигации для прохождения.</p>
+
+    <div class="icon-row">
+        <div class="icon">🔗</div>
+        <div class="desc">
+            <div class="label">Поделиться маршрутом</div>
+            <div class="hint">Кнопка в настройках маршрута</div>
+        </div>
+    </div>
+    <p>Нажмите <kbd>🔗 Скопировать ссылку</kbd> — выберите платформу (VK или Telegram) для копирования ссылки на маршрут.</p>
+
+    <h2>Карта</h2>
+    <div class="icon-row">
+        <div class="icon">🗺️</div>
+        <div class="desc">
+            <div class="label">Переключение вида карты</div>
+            <div class="hint">Левая верхняя кнопка</div>
+        </div>
+    </div>
+    <p>Переключает между спутниковым и схематичным видом карты.</p>
+
+    <div class="icon-row">
+        <div class="icon">💾</div>
+        <div class="desc">
+            <div class="label">Автосохранение</div>
+            <div class="hint">После завершения рисования пути</div>
+        </div>
+    </div>
+    <p>Изменения автоматически сохраняются при завершении рисования пути, удалении точки или нажатии кнопки <kbd>Готово</kbd> в списке точек.</p>
+
+    <h2>Цвета точек, команды и их значение</h2>
+    <p>Цвет маркера показывает тип манёвра. Для каждого цвета доступен свой набор команд:</p>
+
+    <div class="color-row"><div class="swatch" style="background:#FFD700"></div> <span><strong>Маневры на перекрёстке</strong></span></div>
+    <ul class="cmd-list">
+        <li>На перекрестке повернем налево</li>
+        <li>На перекрестке едем прямо</li>
+        <li>На перекрестке повернем направо</li>
+        <li>На перекрестке выполним разворот</li>
+        <li>На круговом движении первый съезд</li>
+        <li>На круговом движении второй съезд</li>
+        <li>На круговом движении третий съезд</li>
+        <li>На круговом движении четвертый съезд</li>
+        <li>На круговом движении выполним разворот</li>
+        <li>На регулируемом перекрестке повернем налево</li>
+        <li>На регулируемом перекрестке едем прямо</li>
+        <li>На регулируемом перекрестке повернем направо</li>
+        <li>На регулируемом перекрестке выполним разворот</li>
+        <li>На нерегулируемом перекрестке повернем налево</li>
+        <li>На нерегулируемом перекрестке едем прямо</li>
+        <li>На нерегулируемом перекрестке повернем направо</li>
+        <li>На нерегулируемом перекрестке выполним разворот</li>
+        <li>Выполним разворот в ближайшем разрешенном месте</li>
+    </ul>
+
+    <div class="color-row"><div class="swatch" style="background:#007AFF"></div> <span><strong>Разворот вне перекрёстка</strong></span></div>
+    <ul class="cmd-list">
+        <li>Выполним разворот вне перекрестка</li>
+        <li>Выполним разворот в ближайшем разрешенном месте</li>
+        <li>Найдите место для разворота и развернитесь</li>
+    </ul>
+
+    <div class="color-row"><div class="swatch" style="background:#FF3B30"></div> <span><strong>Разгон до максимальной скорости</strong></span></div>
+    <ul class="cmd-list">
+        <li>Выполняем разгон до максимальной скорости</li>
+        <li>Набираем максимальную скорость на данном участке дороги</li>
+        <li>Разгоняемся до максимальной разрешенной скорости</li>
+    </ul>
+
+    <div class="color-row"><div class="swatch" style="background:#AF52DE"></div> <span><strong>Остановка и начало движения на подъёме</strong></span></div>
+    <ul class="cmd-list">
+        <li>По моей команде выполним остановку и начало движения на подъеме</li>
+        <li>Выполняем остановку и начало движения на подъеме</li>
+    </ul>
+
+    <div class="color-row"><div class="swatch" style="background:#FF9500"></div> <span><strong>Левые и правые повороты</strong></span></div>
+    <ul class="cmd-list">
+        <li>Поворачиваем направо</li>
+        <li>Поворачиваем налево</li>
+        <li>Далее повернем направо</li>
+        <li>Далее повернем налево</li>
+        <li>На светофоре повернем направо</li>
+        <li>На светофоре повернем налево</li>
+        <li>Поворачиваем направо к ленте</li>
+        <li>Поворачиваем направо на заправку</li>
+        <li>Едем в прямом направлении</li>
+    </ul>
+
+    <div class="color-row"><div class="swatch" style="background:#5856D6"></div> <span><strong>Параллельная парковка и гараж</strong></span></div>
+    <ul class="cmd-list">
+        <li>Выполняем параллельную парковку и гараж</li>
+    </ul>
+
+    <div class="color-row"><div class="swatch" style="background:#5AC8FA"></div> <span><strong>Разворот в ограниченном пространстве</strong></span></div>
+    <ul class="cmd-list">
+        <li>Выполняем разворот в ограниченном пространстве</li>
+        <li>Выполним разворот в ограниченном пространстве с использованием передачи заднего хода</li>
+    </ul>
+
+    <div class="color-row"><div class="swatch" style="background:#A2845E"></div> <span><strong>Остановка</strong></span></div>
+    <ul class="cmd-list">
+        <li>Выполняем остановку параллельно краю проезжей части</li>
+        <li>Выполняем остановку в ближайшем разрешенном месте</li>
+    </ul>
+
+    <div class="color-row"><div class="swatch" style="background:#34C759"></div> <span><strong>Начало движения</strong></span></div>
+    <ul class="cmd-list">
+        <li>Начинаем движение</li>
+        <li>Как будете готовы начинаем движение</li>
+    </ul>
+
+    <h2>Советы по использованию</h2>
+    <ul>
+        <li>Ставьте новую точку от конца пути предыдущей, что бы весь маршрут выглядел неприрывным.</li>
+        <li>После создания маршрута откройте его в навигаторе, чтобы проверить прохождение.</li>
+        <li>Если маршрут публичный (галочка «Отображать в публичном списке»), он будет доступен всем пользователям.</li>
+        <li>Укажите категорию в настройках маршрута, она будет папкой внутри которой будет маршрут в навигаторе.</li>
+    </ul>
+
+    <hr>
+    <p style="text-align:center; color:#8b8f99; font-size:13px;">
+        Приложение работает в мини-приложениях VK и Telegram<br>
+        Если у вас возникли вопросы или предложения, обратитесь к администратору
+    </p>
+</body>
+</html>
