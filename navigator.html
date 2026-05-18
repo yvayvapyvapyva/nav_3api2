@@ -83,7 +83,8 @@ const APP = {
     navPoints: [], navCurrentIndex: 0, navPreviewIndex: -1,
     navAudio: new Audio(),
     navConfig: { TRIGGER_DIST: 25, AZ_TOLERANCE: 45, SPEED_THRESHOLD: 2 },
-    _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null
+    _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null,
+    _driveActive: false, _driveRaf: null
 };
 
 const $ = id => document.getElementById(id);
@@ -142,9 +143,11 @@ function getGeoDistance(p1, p2) {
     return R * c;
 }
 
-function setMapLocation(center, zoom, azimuth) {
+function setMapLocation(center, zoom, azimuth, duration = 400) {
     if (!APP.map) return;
-    APP.map.setLocation({ center: [center[1], center[0]], zoom, duration: 400 });
+    const loc = { center: [center[1], center[0]], duration };
+    if (zoom !== undefined) loc.zoom = zoom;
+    APP.map.setLocation(loc);
     if (azimuth !== undefined) {
         let targetAz = -azimuth * Math.PI / 180;
         while (targetAz > Math.PI) targetAz -= 2 * Math.PI;
@@ -154,8 +157,57 @@ function setMapLocation(center, zoom, azimuth) {
         const k = Math.round((curAz - targetAz) / (2 * Math.PI));
         const S = targetAz + k * 2 * Math.PI;
         APP.lastAz = S;
-        APP.map.setCamera({ azimuth: S, tilt: Math.PI / 6, duration: 400 });
+        APP.map.setCamera({ azimuth: S, tilt: Math.PI / 6, duration: 0 });
     }
+}
+
+function stopDrive() {
+    APP._driveActive = false;
+    if (APP._driveRaf) { cancelAnimationFrame(APP._driveRaf); APP._driveRaf = null; }
+}
+
+function driveAlongPath(fromIdx) {
+    const p = APP.navPoints[fromIdx];
+    if (!p || !p.pts || p.pts.length < 2) return;
+    stopDrive();
+
+    const path = p.pts;
+    const dists = [0];
+    for (let i = 1; i < path.length; i++) {
+        dists[i] = dists[i - 1] + getGeoDistance(path[i - 1], path[i]);
+    }
+    const totalDist = dists[path.length - 1];
+    if (totalDist < 0.1) return;
+    const totalDuration = Math.max(1, Math.min(8, totalDist / 20));
+
+    APP._driveActive = true;
+    const startTime = performance.now();
+
+    function frame(time) {
+        if (!APP._driveActive) return;
+        const elapsed = (time - startTime) / 1000;
+        const progress = Math.min(1, elapsed / totalDuration);
+
+        if (progress >= 1) {
+            const lastPt = path[path.length - 1];
+            const prevPt = path.length >= 2 ? path[path.length - 2] : lastPt;
+            setMapLocation([lastPt[0], lastPt[1]], undefined, calcAzimuth(prevPt, lastPt), 0);
+            if (fromIdx + 1 < APP.navPoints.length) showPreview(fromIdx + 1);
+            stopDrive();
+            return;
+        }
+
+        const targetDist = progress * totalDist;
+        let i = 0;
+        while (i < dists.length - 1 && dists[i + 1] < targetDist) i++;
+        const t = dists[i + 1] > dists[i] ? (targetDist - dists[i]) / (dists[i + 1] - dists[i]) : 0;
+        const lat = path[i][0] + (path[i + 1][0] - path[i][0]) * t;
+        const lon = path[i][1] + (path[i + 1][1] - path[i][1]) * t;
+        const az = calcAzimuth(path[i], path[i + 1]);
+        setMapLocation([lat, lon], undefined, az, 0);
+        APP._driveRaf = requestAnimationFrame(frame);
+    }
+    APP._driveRaf = requestAnimationFrame(frame);
 }
 
 
@@ -287,6 +339,7 @@ function updateRouteNameDisplay() {
 }
 
 function clearRoute() {
+    stopDrive();
     removeRouteObjects();
     APP.navPoints = [];
     APP.navCurrentIndex = 0;
@@ -378,8 +431,17 @@ function updateHud() {
     const prevBtn = $('prevBtn'), nextBtn = $('nextBtn');
     prevBtn.disabled = (idx <= 0);
     nextBtn.disabled = (idx >= APP.navPoints.length - 1);
-    prevBtn.onclick = () => idx > 0 && showPreview(idx - 1);
-    nextBtn.onclick = () => idx < APP.navPoints.length - 1 && showPreview(idx + 1);
+    prevBtn.onclick = () => { stopDrive(); idx > 0 && showPreview(idx - 1); };
+    nextBtn.onclick = () => {
+        if (idx >= APP.navPoints.length - 1) return;
+        if (APP._driveActive) { stopDrive(); showPreview(idx + 1); return; }
+        const p = APP.navPoints[idx];
+        if (p && p.pts && p.pts.length >= 2) {
+            driveAlongPath(idx);
+        } else {
+            showPreview(idx + 1);
+        }
+    };
 
     $('commentText').textContent = t.comm;
     $('commentBlock').classList.toggle('visible', t.comm && t.comm.trim() !== '');
@@ -398,36 +460,13 @@ function updateHudDist(d, ad) {
 function showPreview(i) {
     const p = APP.navPoints[i];
     if (!p) return;
+    stopDrive();
     APP.navPreviewIndex = i;
     updateHud();
     renderRoutePoints();
 
-    if (p.pts && p.pts.length >= 2) {
-        let minLat = Infinity, maxLat = -Infinity;
-        let minLon = Infinity, maxLon = -Infinity;
-        for (const pt of p.pts) {
-            if (pt[0] < minLat) minLat = pt[0];
-            if (pt[0] > maxLat) maxLat = pt[0];
-            if (pt[1] < minLon) minLon = pt[1];
-            if (pt[1] > maxLon) maxLon = pt[1];
-        }
-        const centerLon = (minLon + maxLon) / 2;
-        const centerLat = (minLat + maxLat) / 2;
-        const latDiff = maxLat - minLat;
-        const lonDiff = maxLon - minLon;
-        const maxDiff = Math.max(latDiff, lonDiff);
-        let zoom = 18;
-        if (maxDiff > 0.5) zoom = 10;
-        else if (maxDiff > 0.2) zoom = 11;
-        else if (maxDiff > 0.1) zoom = 12;
-        else if (maxDiff > 0.02) zoom = 13;
-        else if (maxDiff > 0.01) zoom = 14;
-        else if (maxDiff > 0.005) zoom = 15;
-        else if (maxDiff > 0.002) zoom = 16;
-        else if (maxDiff > 0.0005) zoom = 17;
-        setMapLocation([centerLat, centerLon], zoom, p.az);
-    } else if (p.lat && p.lon) {
-        setMapLocation([p.lat, p.lon], 17, p.az);
+    if (p.lat && p.lon) {
+        setMapLocation([p.lat, p.lon], undefined, p.az);
     }
 }
 
@@ -708,6 +747,7 @@ ymaps3.ready.then(async () => {
     $('mapTypeBtn').addEventListener('click', toggleMapType);
 
     document.getElementById('map').addEventListener('click', (e) => {
+        stopDrive();
         if (!e.target.closest('[data-idx]')) closePreview();
     });
 
