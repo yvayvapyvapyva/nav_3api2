@@ -13,6 +13,7 @@
     <script src="https://unpkg.com/@vkontakte/vk-bridge@latest/dist/browser.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yandex/ymaps3-default-ui-theme@latest/dist/esm/index.css">
     <script src="assets/js/vk-user.js"></script>
     <script src="assets/js/tg-user.js"></script>
     <script src="assets/js/menu-module.js"></script>
@@ -44,9 +45,7 @@
 <button id="locateBtn" class="circle-btn">
     <svg viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
 </button>
-<button id="rotateBtn" class="circle-btn" style="top: calc(110px + env(safe-area-inset-top)); left: 12px;">
-    <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-</button>
+
 <div id="routeNameDisplay"></div>
 
 <div id="telemetryPanel">
@@ -84,7 +83,7 @@ const APP = {
     navPoints: [], navCurrentIndex: 0, navPreviewIndex: -1,
     navAudio: new Audio(),
     navConfig: { TRIGGER_DIST: 25, AZ_TOLERANCE: 45, SPEED_THRESHOLD: 2 },
-    _isScheme: true, _isRotated: false, _schemeLayer: null, _featuresLayer: null, _buildings: null
+    _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null
 };
 
 const $ = id => document.getElementById(id);
@@ -227,20 +226,6 @@ function addBuildingsToMap() {
         APP._buildings = new YMapBuildings({});
         APP.map.addChild(APP._buildings);
     }).catch(() => {});
-}
-
-function toggleRotation() {
-    if (!APP.map) return;
-    APP._isRotated = !APP._isRotated;
-    if (APP._isRotated) {
-        APP.map.setCamera({ azimuth: 30, tilt: 35 });
-        $('rotateBtn').classList.add('active');
-        showToast('Наклон включён', 'info', 1500);
-    } else {
-        APP.map.setCamera({ azimuth: 0, tilt: 0 });
-        $('rotateBtn').classList.remove('active');
-        showToast('Наклон выключен', 'info', 1500);
-    }
 }
 
 function getNavIconSvg(col, txt, az, isEnd, isCurr = false, hasComm = false) {
@@ -684,11 +669,12 @@ document.addEventListener('pointerdown', (e) => {
 document.addEventListener('DOMContentLoaded', () => { setTimeout(startWakeLock, 500); });
 
 ymaps3.ready.then(async () => {
-    const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapDefaultSatelliteLayer, YMapMarker } = ymaps3;
+    const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapDefaultSatelliteLayer, YMapMarker, YMapControls } = ymaps3;
 
     APP.map = new YMap(document.getElementById('map'), {
         location: { center: [43.9968, 56.3269], zoom: 17 },
-        zoomRange: { min: 3, max: 20 }
+        zoomRange: { min: 3, max: 20 },
+        behaviors: ['drag', 'scrollZoom', 'dblClick', 'pinchZoom', 'pinchRotate', 'pinchTilt', 'mouseTilt', 'mouseRotate']
     });
 
     APP._schemeLayer = new YMapDefaultSchemeLayer({});
@@ -703,6 +689,12 @@ ymaps3.ready.then(async () => {
         APP.map.addChild(APP._buildings);
     } catch (e) {}
 
+    try {
+        ymaps3.import.registerCdn('https://cdn.jsdelivr.net/npm/{package}', ['@yandex/ymaps3-default-ui-theme@latest']);
+        const { YMapRotateTiltControl } = await ymaps3.import('@yandex/ymaps3-default-ui-theme');
+        APP.map.addChild(new YMapControls({ position: 'right' }, [new YMapRotateTiltControl({})]));
+    } catch (e) {}
+
     const userEl = document.createElement('div');
     userEl.style.transform = 'translate(-50%,-50%)';
     userEl.innerHTML = `<img src="${getUserLocSvg(0)}" width="40" height="40" />`;
@@ -713,7 +705,6 @@ ymaps3.ready.then(async () => {
     $('locateBtn').addEventListener('click', toggleAutoCenter);
     $('commentBlock').addEventListener('click', () => $('commentBlock').classList.remove('visible'));
     $('mapTypeBtn').addEventListener('click', toggleMapType);
-    $('rotateBtn').addEventListener('click', toggleRotation);
 
     document.getElementById('map').addEventListener('click', (e) => {
         if (!e.target.closest('[data-idx]')) closePreview();
