@@ -39,7 +39,7 @@
 <video id="wakeLockVideo" playsinline muted loop></video>
 
 <div id="map"></div>
-<button id="mapTypeBtn" class="circle-btn" title="Спутник / Схема (3D)" style="top: calc(50px + env(safe-area-inset-top)); left: 12px;">
+<button id="mapTypeBtn" class="circle-btn" title="Спутник / Схема" style="top: calc(50px + env(safe-area-inset-top)); left: 12px;">
     <svg viewBox="0 0 24 24"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg>
 </button>
 <button id="locateBtn" class="circle-btn">
@@ -216,7 +216,7 @@ function toggleMapType() {
         APP.map.addChild(APP._schemeLayer);
         addBuildingsToMap();
         $('mapTypeBtn').classList.add('api-v3');
-        showToast('Схема (3D)', 'info', 2000);
+        showToast('Схема', 'info', 2000);
     }
     APP._isScheme = !APP._isScheme;
 }
@@ -237,9 +237,6 @@ function getNavIconSvg(col, txt, az, isEnd, isCurr = false, hasComm = false) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}">
         <rect width="${s}" height="${s}" fill="transparent"/>
         ${isCurr ? `<circle cx="${c}" cy="${c}" r="${r + 3}" fill="none" stroke="#00FF00" stroke-width="2.5" opacity="0.9"/>` : ''}
-        <g transform="rotate(${az},${c},${c})">
-            <polygon points="${c},2 ${c+r},${c} ${c-r},${c}" fill="${col}" stroke="#000000" stroke-width="1" opacity="0.9"/>
-        </g>
         <circle cx="${c}" cy="${c}" r="${r}" fill="rgba(0,0,0,0.7)"/>
         <circle cx="${c}" cy="${c}" r="${r}" fill="${col}" opacity="0.3"/>
         <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${col}" stroke-width="1.5"/>
