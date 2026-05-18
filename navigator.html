@@ -485,11 +485,17 @@ function updateHud() {
 
     const prevBtn = $('prevBtn'), nextBtn = $('nextBtn');
     prevBtn.disabled = (idx <= 0);
-    nextBtn.disabled = (idx >= APP.navPoints.length - 1);
+    const np = APP.navPoints[idx];
+    const hasPath = np && np.pts && np.pts.length >= 2;
+    nextBtn.disabled = (idx >= APP.navPoints.length - 1 && !hasPath);
     prevBtn.onclick = () => { stopDrive(); idx > 0 && showPreview(idx - 1); };
     nextBtn.onclick = () => {
-        if (idx >= APP.navPoints.length - 1) return;
         if (APP._driveActive) { stopDrive(); showPreview(idx + 1); return; }
+        if (idx >= APP.navPoints.length - 1) {
+            const lp = APP.navPoints[idx];
+            if (lp && lp.pts && lp.pts.length >= 2 && !APP.autoCenter) driveAlongPath(idx);
+            return;
+        }
         const p = APP.navPoints[idx];
         if (p && p.pts && p.pts.length >= 2 && !APP.autoCenter) {
             driveAlongPath(idx);
