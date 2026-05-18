@@ -159,9 +159,10 @@ function getGeoDistance(p1, p2) {
 
 function setMapLocation(center, zoom, azimuth, duration = 400) {
     if (!APP.map) return;
+    const params = {};
     const loc = { center: [center[1], center[0]], duration };
     if (zoom !== undefined) loc.zoom = zoom;
-    APP.map.setLocation(loc);
+    params.location = loc;
     if (azimuth !== undefined) {
         const targetDeg = ((azimuth % 360) + 360) % 360;
         let curDeg = 0;
@@ -170,8 +171,9 @@ function setMapLocation(center, zoom, azimuth, duration = 400) {
         while (diff > 180) diff -= 360;
         while (diff < -180) diff += 360;
         const finalDeg = curDeg + diff;
-        APP.map.update({ camera: { azimuth: -finalDeg * Math.PI / 180, tilt: APP.lastTilt, duration: 0 } });
+        params.camera = { azimuth: -finalDeg * Math.PI / 180, tilt: APP.lastTilt, duration: 0 };
     }
+    APP.map.update(params);
 }
 
 function stopDrive() {
@@ -201,9 +203,10 @@ function driveAlongPath(fromIdx) {
 
     APP._driveActive = true;
     const startTime = performance.now();
-    let curCamAz = APP.lastAz;
-    try { curCamAz = APP.map.camera.azimuth * 180 / Math.PI; curCamAz = ((curCamAz % 360) + 360) % 360; } catch (e) {}
-    let smoothAz = curCamAz;
+    let smoothAz = APP.lastAz;
+    try { smoothAz = ((APP.map.camera.azimuth * 180 / Math.PI) % 360 + 360) % 360; } catch (e) {
+        if (path.length >= 2) smoothAz = calcAzimuth(path[0], path[1]);
+    }
     let lastFrameTime = 0;
     const FRAME_INTERVAL = 33;
 
