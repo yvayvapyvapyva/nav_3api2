@@ -185,6 +185,8 @@ function driveAlongPath(fromIdx) {
     APP._driveActive = true;
     const startTime = performance.now();
     let smoothAz = calcAzimuth(path[0], path[1] || path[0]);
+    let lastFrameTime = 0;
+    const FRAME_INTERVAL = 33;
 
     const markerEl = document.createElement('div');
     markerEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" fill="#FF3B30" stroke="#fff" stroke-width="2.5"/></svg>';
@@ -194,6 +196,11 @@ function driveAlongPath(fromIdx) {
 
     function frame(time) {
         if (!APP._driveActive) return;
+        if (time - lastFrameTime < FRAME_INTERVAL) {
+            APP._driveRaf = requestAnimationFrame(frame);
+            return;
+        }
+        lastFrameTime = time;
         const elapsed = (time - startTime) / 1000;
         const progress = Math.min(1, elapsed / totalDuration);
 
@@ -218,7 +225,7 @@ function driveAlongPath(fromIdx) {
         let diff = targetAz - smoothAz;
         while (diff > 180) diff -= 360;
         while (diff < -180) diff += 360;
-        smoothAz += diff * 0.12;
+        smoothAz += diff * 0.3;
         setMapLocation([lat, lon], undefined, ((smoothAz % 360) + 360) % 360, 0);
         if (APP._driveMarker) APP._driveMarker.update({ coordinates: [lon, lat] });
         APP._driveRaf = requestAnimationFrame(frame);
