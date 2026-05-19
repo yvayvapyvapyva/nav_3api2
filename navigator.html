@@ -86,7 +86,8 @@ const APP = {
     navConfig: { TRIGGER_DIST: 25, AZ_TOLERANCE: 45, SPEED_THRESHOLD: 2 },
     _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null,
     _driveActive: false, _driveRaf: null, _driveMarker: null, _driveShowFrom: -1,
-    _userMarkerEl: null, markerRotation: 0
+    _userMarkerEl: null, markerRotation: 0,
+    _lastCameraAz: null
 };
 
 const $ = id => document.getElementById(id);
@@ -164,6 +165,11 @@ function setMapLocation(center, zoom, azimuth, duration = 400) {
     if (zoom !== undefined) loc.zoom = zoom;
     params.location = loc;
     if (azimuth !== undefined) {
+        if (azimuth === APP._lastCameraAz) {
+            APP.map.update(params);
+            return;
+        }
+        APP._lastCameraAz = azimuth;
         const targetDeg = ((azimuth % 360) + 360) % 360;
         let curDeg = 0;
         try { curDeg = ((APP.map.camera.azimuth * 180 / Math.PI) % 360 + 360) % 360; } catch (e) {}
