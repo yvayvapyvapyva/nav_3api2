@@ -20,16 +20,39 @@
 <style>
 #speedSliderWrap {
     position: fixed; right: 12px; top: 50%; transform: translateY(-50%);
-    background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
+    background: rgba(15,15,15,0.75);
+    border: 0.5px solid rgba(255,255,255,0.12);
     padding: 4px; border-radius: 12px; z-index: 1000;
     display: none; flex-direction: column; align-items: center; gap: 2px;
     color: #fff; font-size: 14px; font-weight: 600;
 }
-#speedSliderWrap input { accent-color: #FF3B30; }
+#speedSliderWrap input { accent-color: rgba(255,59,48,0.7); }
 #speedSliderWrap input[orient="vertical"] {
     -webkit-appearance: slider-vertical;
     writing-mode: bt-lr;
     width: 28px; height: 200px; margin: 0; padding: 0;
+    background: transparent;
+}
+#speedSliderWrap input[orient="vertical"]::-webkit-slider-runnable-track {
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+}
+#speedSliderWrap input[orient="vertical"]::-webkit-slider-thumb {
+    background: rgba(255,59,48,0.7);
+    border: none;
+    border-radius: 50%;
+    width: 16px; height: 16px;
+    box-shadow: 0 0 4px rgba(255,59,48,0.3);
+}
+#speedSliderWrap input[orient="vertical"]::-moz-range-track {
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+}
+#speedSliderWrap input[orient="vertical"]::-moz-range-thumb {
+    background: rgba(255,59,48,0.7);
+    border: none;
+    border-radius: 50%;
+    width: 16px; height: 16px;
 }
 </style>
 </head>
