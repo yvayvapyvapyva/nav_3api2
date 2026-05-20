@@ -1633,8 +1633,8 @@ select.cmd-select {
     padding: 8px 0 4px;
 }
 .info-points-body .comm-input {
-    margin: 6px 8px 4px;
-    width: auto;
+    margin: 0 0 6px;
+    min-height: 40px;
 }
 .info-point-row {
     display: flex;
