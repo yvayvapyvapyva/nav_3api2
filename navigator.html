@@ -86,7 +86,8 @@ const APP = {
     navConfig: { TRIGGER_DIST: 25, AZ_TOLERANCE: 45, SPEED_THRESHOLD: 2 },
     _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null,
     _driveActive: false, _driveRaf: null, _driveMarker: null, _driveShowFrom: -1,
-    _userMarkerEl: null, markerRotation: 0
+    _userMarkerEl: null, markerRotation: 0,
+    _markerAnim: null, _lastMarkerPos: null
 };
 
 const $ = id => document.getElementById(id);
@@ -174,6 +175,27 @@ function setMapLocation(center, zoom, azimuth, duration = 400) {
         params.camera = { azimuth: -finalDeg * Math.PI / 180, tilt: APP.lastTilt, duration };
     }
     APP.map.update(params);
+}
+
+function animateMarkerTo(lat, lng) {
+    if (APP._markerAnim) cancelAnimationFrame(APP._markerAnim);
+    const fromPos = APP._lastMarkerPos || [lat, lng];
+    const fromLng = fromPos[1], fromLat = fromPos[0];
+    const start = performance.now();
+    const duration = 900;
+    function frame(time) {
+        const t = Math.min(1, (time - start) / duration);
+        const curLat = fromLat + (lat - fromLat) * t;
+        const curLng = fromLng + (lng - fromLng) * t;
+        APP.userMarker.update({ coordinates: [curLng, curLat] });
+        APP._lastMarkerPos = [curLat, curLng];
+        if (t < 1) {
+            APP._markerAnim = requestAnimationFrame(frame);
+        } else {
+            APP._markerAnim = null;
+        }
+    }
+    APP._markerAnim = requestAnimationFrame(frame);
 }
 
 function stopDrive() {
@@ -282,13 +304,26 @@ function initGeolocation() {
             const coords = [pos.coords.latitude, pos.coords.longitude];
             const speed = (pos.coords.speed || 0) * 3.6;
             if (APP.lastPos && speed >= APP.navConfig.SPEED_THRESHOLD) {
-                APP.lastAz = calcAzimuth(APP.lastPos, coords);
+                const rawAz = calcAzimuth(APP.lastPos, coords);
+                if (APP.lastAz === 0) {
+                    APP.lastAz = rawAz;
+                } else {
+                    let d = rawAz - APP.lastAz;
+                    if (d > 180) d -= 360;
+                    if (d < -180) d += 360;
+                    APP.lastAz = ((APP.lastAz + d * 0.35) % 360 + 360) % 360;
+                }
             }
             APP.lastPos = coords;
             APP.currentSpeed = speed;
 
             if (APP.userMarker && APP._userMarkerEl) {
-                APP.userMarker.update({ coordinates: [coords[1], coords[0]] });
+                if (APP._lastMarkerPos) {
+                    animateMarkerTo(coords[0], coords[1]);
+                } else {
+                    APP.userMarker.update({ coordinates: [coords[1], coords[0]] });
+                    APP._lastMarkerPos = coords;
+                }
                 updateUserMarkerRotation();
             }
             $('telSpeed').textContent = Math.round(APP.currentSpeed);
