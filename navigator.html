@@ -194,6 +194,16 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
         APP._lastMarkerPos = [curLat, curLng];
         APP._currentDisplayAz = ((fromAz + dAz * t) % 360 + 360) % 360;
         updateUserMarkerRotation();
+        if (APP.autoCenter && APP.map) {
+            if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
+                APP.map.update({
+                    location: { center: [curLng, curLat], duration: 0 },
+                    camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
+                });
+            } else {
+                APP.map.setLocation({ center: [curLng, curLat], duration: 0 });
+            }
+        }
         if (t < 1) {
             APP._markerAnim = requestAnimationFrame(frame);
         } else {
@@ -329,19 +339,18 @@ function initGeolocation() {
                     APP.userMarker.update({ coordinates: [coords[1], coords[0]] });
                     APP._lastMarkerPos = coords;
                     APP._currentDisplayAz = APP.lastAz;
+                    if (APP.autoCenter && APP.map) {
+                        APP.map.update({
+                            location: { center: [coords[1], coords[0]], duration: 0 },
+                            camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
+                        });
+                    }
                 }
                 updateUserMarkerRotation();
             }
             $('telSpeed').textContent = Math.round(APP.currentSpeed);
 
             const pi = APP.navPreviewIndex >= 0 ? APP.navPreviewIndex : APP.navCurrentIndex;
-            if (APP.autoCenter && APP.map) {
-                if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
-                    setMapLocation(APP.lastPos, undefined, APP.lastAz, 0);
-                } else {
-                    APP.map.setLocation({ center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 });
-                }
-            }
             if (APP.navCurrentIndex >= 0 && APP.navPreviewIndex < 0) navCheckTriggers();
         }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
     }
