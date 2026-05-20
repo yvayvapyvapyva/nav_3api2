@@ -196,15 +196,9 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
         updateUserMarkerRotation();
         if (APP.autoCenter && APP.map) {
             if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
-                let curMapAzDeg = 0;
-                try { curMapAzDeg = ((APP.map.azimuth || 0) * 180 / Math.PI); } catch (e) {}
-                const targetDeg = -APP._currentDisplayAz;
-                let diff = targetDeg - curMapAzDeg;
-                diff = ((diff + 180) % 360) - 180;
-                curMapAzDeg += diff * 0.1;
                 APP.map.update({
                     location: { center: [curLng, curLat], duration: 0 },
-                    camera: { azimuth: curMapAzDeg * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
+                    camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
                 });
             } else {
                 APP.map.update({
@@ -345,15 +339,13 @@ function initGeolocation() {
                 if (APP._lastMarkerPos) {
                     animateMarkerTo(coords[0], coords[1], APP._currentDisplayAz, APP.lastAz);
                 } else {
-                    APP.userMarker.update({ coordinates: [coords[1], coords[0]] });
-                    APP._lastMarkerPos = coords;
-                    APP._currentDisplayAz = APP.lastAz;
-                    if (APP.autoCenter && APP.map) {
-                        APP.map.update({
-                            location: { center: [coords[1], coords[0]], duration: 0 },
-                            camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
-                        });
+                    try {
+                        const c = APP.map.center;
+                        APP._lastMarkerPos = [c[1], c[0]];
+                    } catch (e) {
+                        APP._lastMarkerPos = coords;
                     }
+                    animateMarkerTo(coords[0], coords[1], APP.lastAz, APP.lastAz);
                 }
                 updateUserMarkerRotation();
             }
