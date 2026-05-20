@@ -198,10 +198,10 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
             if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
                 APP.map.update({
                     location: { center: [curLng, curLat], duration: 0 },
-                    camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
+                    camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, duration: 0 }
                 });
             } else {
-                APP.map.setLocation({ center: [curLng, curLat], duration: 0 });
+                APP.map.update({ location: { center: [curLng, curLat], duration: 0 } });
             }
         }
         if (t < 1) {
@@ -342,7 +342,7 @@ function initGeolocation() {
                     if (APP.autoCenter && APP.map) {
                         APP.map.update({
                             location: { center: [coords[1], coords[0]], duration: 0 },
-                            camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
+                            camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, duration: 0 }
                         });
                     }
                 }
@@ -362,9 +362,12 @@ function toggleAutoCenter() {
     if (APP.autoCenter) stopDrive();
     if (APP.autoCenter && APP.lastPos) {
         if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
-            setMapLocation(APP.lastPos, undefined, APP.lastAz, 0);
+            APP.map.update({
+                location: { center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 },
+                camera: { azimuth: -APP.lastAz * Math.PI / 180, duration: 0 }
+            });
         } else {
-            APP.map.setLocation({ center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 });
+            APP.map.update({ location: { center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 } });
         }
     }
     showToast(APP.autoCenter ? 'Привязка включена' : 'Привязка отключена');
