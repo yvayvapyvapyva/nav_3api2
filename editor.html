@@ -834,15 +834,9 @@ function renderInfoPlacemarks(p) {
             iconImageHref: getInfoLabelSvg(inf.text || ''),
             iconImageSize: [svgW, 29],
             iconImageOffset: [-Math.round(svgW/2), -28],
-            draggable: true,
             zIndex: 900
         });
-        pm.events.add('dragend', () => {
-            const c = pm.geometry.getCoordinates();
-            p.info[idx].lat = f6(c[0]);
-            p.info[idx].lon = f6(c[1]);
-            updateSaveState();
-        });
+        pm.events.add('click', () => editInfoPoint(p, idx));
         map.geoObjects.add(pm);
         p.infoPlacemarks.push(pm);
     });
@@ -919,6 +913,30 @@ function stopAddingInfo() {
     $('addText').textContent = "Добавить новую точку";
     $('addMarkerBtn').classList.remove('active');
     map.setCursor('grab');
+}
+
+function editInfoPoint(p, idx) {
+    const modal = $('pointsOrderModal');
+    if (modal.style.display !== 'none' && modal.style.display !== '') {
+        modal.style.display = 'none';
+    }
+    openEditPointModal(p);
+    requestAnimationFrame(() => {
+        const card = $('pointsSortList').firstElementChild;
+        if (!card) return;
+        const infoBody = card.querySelector('.info-points-body');
+        const infoToggle = card.querySelector('.info-points-toggle');
+        if (!infoBody || !infoToggle) return;
+        infoBody.style.display = 'block';
+        infoToggle.querySelector('.info-arrow').textContent = '▼';
+        const listEl = card.querySelector('.info-points-list');
+        if (listEl) rebuildInfoPointList(listEl, p, card);
+        const rows = card.querySelectorAll('.info-point-row');
+        if (rows[idx]) {
+            rows[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            rows[idx].classList.add('active');
+        }
+    });
 }
 
 const startDrawingForPoint = (p, isNewPoint = false) => {
