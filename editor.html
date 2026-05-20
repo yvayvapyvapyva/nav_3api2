@@ -872,8 +872,7 @@ function rebuildInfoPointList(listEl, p, card) {
     p.info.forEach((inf, idx) => {
         const row = document.createElement('div');
         row.className = 'info-point-row';
-        row.innerHTML = `<span class="info-coords">${f6(inf.lat)}, ${f6(inf.lon)}</span>
-<input class="info-text-input" value="${inf.text.replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="Текст">
+        row.innerHTML = `<input class="info-text-input" value="${inf.text.replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="Текст">
 <button class="info-del-btn" data-idx="${idx}">✕</button>`;
         const inp = row.querySelector('.info-text-input');
         inp.addEventListener('input', () => {
