@@ -130,6 +130,11 @@ function updateUserMarkerRotation() {
     if (!APP._userMarkerEl || APP.lastAz === null || !APP.map) return;
     const arrow = APP._userMarkerEl.querySelector('#user-arrow');
     if (arrow) {
+        if (APP.autoCenter) {
+            APP.markerRotation = 0;
+            arrow.setAttribute('transform', 'rotate(0, 20, 20)');
+            return;
+        }
         const mapAz = (APP.map.azimuth || 0) * (180 / Math.PI);
         const targetRotation = APP._currentDisplayAz + mapAz;
         let delta = ((targetRotation - APP.markerRotation + 180) % 360) - 180;
@@ -193,7 +198,6 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
         APP.userMarker.update({ coordinates: [curLng, curLat] });
         APP._lastMarkerPos = [curLat, curLng];
         APP._currentDisplayAz = ((fromAz + dAz * t) % 360 + 360) % 360;
-        updateUserMarkerRotation();
         if (APP.autoCenter && APP.map) {
             const camera = { tilt: APP.lastTilt, duration: 0 };
             if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
@@ -203,6 +207,8 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
                 location: { center: [curLng, curLat], duration: 0 },
                 camera
             });
+        } else {
+            updateUserMarkerRotation();
         }
         if (t < 1) {
             APP._markerAnim = requestAnimationFrame(frame);
