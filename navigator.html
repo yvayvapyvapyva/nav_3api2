@@ -94,6 +94,9 @@
 <button id="instructionBtn" onclick="openInstruction()">📖 Инструкция</button>
 
 <div id="hud">
+    <div id="commentBlock">
+        <div id="commentText"></div>
+    </div>
     <div class="hud-header">
         <button class="hud-cmd" id="hudCmd"><span id="hudCmdNum">1</span><span id="hudCmdText"><span id="hudCmdTextInner">Маршрут не выбран</span></span><span id="hudCmdDist">---</span></button>
     </div>
@@ -115,10 +118,6 @@
 <div id="speedSliderWrap" style="display:none;">
     <span id="speedValue">60</span><span style="font-size:10px;opacity:.6">км/ч</span>
     <input type="range" id="speedSlider" min="30" max="120" value="60" step="10" orient="vertical">
-</div>
-
-<div id="commentBlock">
-    <div id="commentText"></div>
 </div>
 
 <script>

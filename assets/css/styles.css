@@ -545,12 +545,7 @@ html, body {
 /* ============================================
    Блок комментария
    ============================================ */
-#commentBlock {
-    position: absolute;
-    top: calc(108px + env(safe-area-inset-top));
-    left: 12px;
-    right: 12px;
-    z-index: 9005;
+#hud #commentBlock {
     display: none;
     padding: 8px 12px;
     background: rgba(0,0,0,0.55);
@@ -558,11 +553,10 @@ html, body {
     color: var(--text-primary);
     border: 1px solid rgba(255,69,58,0.5);
     box-shadow: 0 0 16px rgba(255,69,58,0.3), inset 0 0.5px 0 rgba(255,255,255,0.08);
-    width: calc(100% - 24px);
     box-sizing: border-box;
 }
 
-#commentBlock.visible {
+#hud #commentBlock.visible {
     display: block;
 }
 
