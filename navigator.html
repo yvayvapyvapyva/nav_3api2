@@ -201,7 +201,10 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
                     camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
                 });
             } else {
-                APP.map.update({ location: { center: [curLng, curLat], duration: 0 } });
+                APP.map.update({
+                    location: { center: [curLng, curLat], duration: 0 },
+                    camera: { tilt: APP.lastTilt, duration: 0 }
+                });
             }
         }
         if (t < 1) {
@@ -369,7 +372,10 @@ function toggleAutoCenter() {
                 camera: { azimuth: -APP.lastAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
             });
         } else {
-            APP.map.update({ location: { center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 } });
+            APP.map.update({
+                location: { center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 },
+                camera: { tilt: APP.lastTilt, duration: 0 }
+            });
         }
     }
     showToast(APP.autoCenter ? 'Привязка включена' : 'Привязка отключена');
@@ -863,7 +869,7 @@ ymaps3.ready.then(async () => {
     APP._is3D = false;
     function toggleTilt() {
         APP._is3D = !APP._is3D;
-        APP.lastTilt = APP._is3D ? Math.PI / 3 : 0;
+        APP.lastTilt = APP._is3D ? 60 : 0;
         APP.map.update({ camera: { tilt: APP.lastTilt, duration: 300 } });
         $('tiltBtn').textContent = APP._is3D ? '3D' : '2D';
     }
