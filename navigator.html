@@ -198,7 +198,7 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
             if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
                 APP.map.update({
                     location: { center: [curLng, curLat], duration: 0 },
-                    camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, duration: 0 }
+                    camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
                 });
             } else {
                 APP.map.update({ location: { center: [curLng, curLat], duration: 0 } });
@@ -342,7 +342,7 @@ function initGeolocation() {
                     if (APP.autoCenter && APP.map) {
                         APP.map.update({
                             location: { center: [coords[1], coords[0]], duration: 0 },
-                            camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, duration: 0 }
+                            camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
                         });
                     }
                 }
@@ -364,7 +364,7 @@ function toggleAutoCenter() {
         if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
             APP.map.update({
                 location: { center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 },
-                camera: { azimuth: -APP.lastAz * Math.PI / 180, duration: 0 }
+                camera: { azimuth: -APP.lastAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
             });
         } else {
             APP.map.update({ location: { center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 } });
