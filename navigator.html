@@ -559,10 +559,13 @@ function renderRoutePoints() {
 
     const map = APP.map;
     if (map) {
+        for (let ci = 0; ci < APP.navPoints.length; ci++) {
+            const pt = APP.navPoints[ci];
+            if (pt.line) map.addChild(pt.line);
+        }
         for (let ci = APP.navPoints.length - 1; ci >= 0; ci--) {
             const pt = APP.navPoints[ci];
             if (pt.placemark) map.addChild(pt.placemark);
-            if (pt.line) map.addChild(pt.line);
         }
     }
     updateHud();
