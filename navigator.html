@@ -17,6 +17,21 @@
     <script src="assets/js/vk-user.js"></script>
     <script src="assets/js/tg-user.js"></script>
     <script src="assets/js/menu-module.js"></script>
+<style>
+#speedSliderWrap {
+    position: fixed; right: 12px; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
+    padding: 4px; border-radius: 12px; z-index: 1000;
+    display: none; flex-direction: column; align-items: center; gap: 2px;
+    color: #fff; font-size: 14px; font-weight: 600;
+}
+#speedSliderWrap input { accent-color: #FF3B30; }
+#speedSliderWrap input[orient="vertical"] {
+    -webkit-appearance: slider-vertical;
+    writing-mode: bt-lr;
+    width: 28px; height: 200px; margin: 0; padding: 0;
+}
+</style>
 </head>
 <body>
 
@@ -74,6 +89,11 @@
 
 <div id="toast"></div>
 
+<div id="speedSliderWrap" style="display:none;">
+    <span id="speedValue">60</span><span style="font-size:10px;opacity:.6">км/ч</span>
+    <input type="range" id="speedSlider" min="30" max="120" value="60" step="10" orient="vertical">
+</div>
+
 <div id="commentBlock">
     <div id="commentText"></div>
 </div>
@@ -86,6 +106,7 @@ const APP = {
     navConfig: { TRIGGER_DIST: 25, AZ_TOLERANCE: 45, SPEED_THRESHOLD: 2 },
     _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null,
     _driveActive: false, _driveRaf: null, _driveMarker: null, _driveShowFrom: -1,
+    _driveSpeed: 60,
     _userMarkerEl: null, markerRotation: 0,
     _markerAnim: null, _lastMarkerPos: null, _currentDisplayAz: 0, _prevAnim: null
 };
@@ -222,6 +243,7 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
 function stopDrive() {
     APP._driveActive = false;
     APP._driveShowFrom = -1;
+    $('speedSliderWrap').style.display = 'none';
     if (APP._driveRaf) { cancelAnimationFrame(APP._driveRaf); APP._driveRaf = null; }
     if (APP._driveMarker) { APP.map.removeChild(APP._driveMarker); APP._driveMarker = null; }
     if (APP._prevAnim) { cancelAnimationFrame(APP._prevAnim); APP._prevAnim = null; }
@@ -243,15 +265,15 @@ function driveAlongPath(fromIdx) {
     APP._driveShowFrom = fromIdx;
     renderRoutePoints();
 
-    const totalDuration = Math.max(1, Math.min(8, totalDist / 20));
-
     APP._driveActive = true;
-    const startTime = performance.now();
+    $('speedSliderWrap').style.display = 'flex';
+    $('speedValue').textContent = APP._driveSpeed;
+    let simulatedDist = 0;
     let smoothAz = APP.lastAz;
     try { smoothAz = -(APP.map.azimuth * 180 / Math.PI); } catch (e) {
         if (path.length >= 2) smoothAz = calcAzimuth(path[0], path[1]);
     }
-    let lastFrameTime = 0;
+    let lastFrameTime = performance.now();
     const FRAME_INTERVAL = 33;
 
     const markerEl = document.createElement('div');
@@ -266,9 +288,10 @@ function driveAlongPath(fromIdx) {
             APP._driveRaf = requestAnimationFrame(frame);
             return;
         }
+        const dt = (time - lastFrameTime) / 1000;
         lastFrameTime = time;
-        const elapsed = (time - startTime) / 1000;
-        const progress = Math.min(1, elapsed / totalDuration);
+        simulatedDist += (APP._driveSpeed / 3.6) * dt;
+        const progress = Math.min(1, simulatedDist / totalDist);
 
         if (progress >= 1) {
             const lastPt = path[path.length - 1];
@@ -276,8 +299,8 @@ function driveAlongPath(fromIdx) {
             smoothAz = calcAzimuth(prevPt, lastPt);
             setMapLocation([lastPt[0], lastPt[1]], undefined, smoothAz, 0);
             if (APP._driveMarker) APP._driveMarker.update({ coordinates: [lastPt[1], lastPt[0]] });
-            if (fromIdx + 1 < APP.navPoints.length) showPreview(fromIdx + 1);
             stopDrive();
+            if (fromIdx + 1 < APP.navPoints.length) showPreview(fromIdx + 1);
             return;
         }
 
@@ -877,6 +900,10 @@ ymaps3.ready.then(async () => {
     $('commentBlock').addEventListener('click', () => $('commentBlock').classList.remove('visible'));
     $('mapTypeBtn').addEventListener('click', toggleMapType);
     $('tiltBtn').addEventListener('click', toggleTilt);
+    $('speedSlider').addEventListener('input', function() {
+        APP._driveSpeed = +this.value;
+        $('speedValue').textContent = this.value;
+    });
 
     document.getElementById('map').addEventListener('click', (e) => {
         stopDrive();
