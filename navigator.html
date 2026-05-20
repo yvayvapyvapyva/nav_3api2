@@ -86,8 +86,7 @@ const APP = {
     navConfig: { TRIGGER_DIST: 25, AZ_TOLERANCE: 45, SPEED_THRESHOLD: 2 },
     _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null,
     _driveActive: false, _driveRaf: null, _driveMarker: null, _driveShowFrom: -1,
-    _userMarkerEl: null, markerRotation: 0,
-    _lastCameraAz: null
+    _userMarkerEl: null, markerRotation: 0
 };
 
 const $ = id => document.getElementById(id);
@@ -165,11 +164,6 @@ function setMapLocation(center, zoom, azimuth, duration = 400) {
     if (zoom !== undefined) loc.zoom = zoom;
     params.location = loc;
     if (azimuth !== undefined) {
-        if (azimuth === APP._lastCameraAz) {
-            APP.map.update(params);
-            return;
-        }
-        APP._lastCameraAz = azimuth;
         const targetDeg = ((azimuth % 360) + 360) % 360;
         let curDeg = 0;
         try { curDeg = ((APP.map.camera.azimuth * 180 / Math.PI) % 360 + 360) % 360; } catch (e) {}
@@ -301,10 +295,10 @@ function initGeolocation() {
 
             const pi = APP.navPreviewIndex >= 0 ? APP.navPreviewIndex : APP.navCurrentIndex;
             if (APP.autoCenter && APP.map) {
-                if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD && APP.lastAz !== 0) {
-                    setMapLocation(APP.lastPos, undefined, APP.lastAz, 2000);
+                if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
+                    setMapLocation(APP.lastPos, undefined, APP.lastAz, 0);
                 } else {
-                    setMapLocation(APP.lastPos, undefined, undefined, 2000);
+                    APP.map.setLocation({ center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 });
                 }
             }
             if (APP.navCurrentIndex >= 0 && APP.navPreviewIndex < 0) navCheckTriggers();
@@ -317,10 +311,10 @@ function toggleAutoCenter() {
     $('locateBtn').classList.toggle('active', APP.autoCenter);
     if (APP.autoCenter) stopDrive();
     if (APP.autoCenter && APP.lastPos) {
-        if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD && APP.lastAz !== 0) {
-            setMapLocation(APP.lastPos, undefined, APP.lastAz, 2000);
+        if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
+            setMapLocation(APP.lastPos, undefined, APP.lastAz, 0);
         } else {
-            setMapLocation(APP.lastPos, undefined, undefined, 2000);
+            APP.map.setLocation({ center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 });
         }
     }
     showToast(APP.autoCenter ? 'Привязка включена' : 'Привязка отключена');
