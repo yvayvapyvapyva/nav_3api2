@@ -130,6 +130,11 @@ function updateUserMarkerRotation() {
     if (!APP._userMarkerEl || APP.lastAz === null || !APP.map) return;
     const arrow = APP._userMarkerEl.querySelector('#user-arrow');
     if (arrow) {
+        if (APP.autoCenter) {
+            APP.markerRotation = 0;
+            arrow.setAttribute('transform', 'rotate(0, 20, 20)');
+            return;
+        }
         const mapAz = (APP.map.azimuth || 0) * (180 / Math.PI);
         const targetRotation = APP._currentDisplayAz + mapAz;
         let delta = ((targetRotation - APP.markerRotation + 180) % 360) - 180;
@@ -195,17 +200,14 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
         APP._currentDisplayAz = ((fromAz + dAz * t) % 360 + 360) % 360;
         updateUserMarkerRotation();
         if (APP.autoCenter && APP.map) {
+            const camera = { tilt: APP.lastTilt, duration: 0 };
             if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
-                APP.map.update({
-                    location: { center: [curLng, curLat], duration: 0 },
-                    camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
-                });
-            } else {
-                APP.map.update({
-                    location: { center: [curLng, curLat], duration: 0 },
-                    camera: { tilt: APP.lastTilt, duration: 0 }
-                });
+                camera.azimuth = -APP._currentDisplayAz * Math.PI / 180;
             }
+            APP.map.update({
+                location: { center: [curLng, curLat], duration: 0 },
+                camera
+            });
         }
         if (t < 1) {
             APP._markerAnim = requestAnimationFrame(frame);
@@ -364,17 +366,14 @@ function toggleAutoCenter() {
         stopDrive();
     }
     if (APP.autoCenter && APP.lastPos) {
+        const camera = { tilt: APP.lastTilt, duration: 0 };
         if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
-            APP.map.update({
-                location: { center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 },
-                camera: { azimuth: -APP.lastAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
-            });
-        } else {
-            APP.map.update({
-                location: { center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 },
-                camera: { tilt: APP.lastTilt, duration: 0 }
-            });
+            camera.azimuth = -APP.lastAz * Math.PI / 180;
         }
+        APP.map.update({
+            location: { center: [APP.lastPos[1], APP.lastPos[0]], duration: 0 },
+            camera
+        });
     }
     showToast(APP.autoCenter ? 'Привязка включена' : 'Привязка отключена');
 }
