@@ -797,22 +797,26 @@ function addP(coords, data = null, silent = false) {
 
 function getInfoLabelSvg(text) {
     const fSize = 12;
-    const r = 8;
+    const padX = 8;
     const textW = Math.min(text.length * 7.2, 150);
-    const w = Math.round(Math.max(textW + 22, 20));
+    const bodyW = Math.max(textW, 20);
+    const w = Math.round(bodyW + padX * 2);
     const cx = Math.round(w / 2);
+    const bodyX = padX, bodyY = 1, bodyH = 20, bodyB = bodyY + bodyH;
+    const tailW = 5, tailH = 7;
+    const svgH = bodyB + tailH + 1;
     const escaped = text.replace(/["&<>]/g, c => ({'"':'&quot;','&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
-    const bodyL = 5 + r, bodyR = w - 3 - r, bodyT = 3, bodyB = 20;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="30">
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${svgH}">
         <defs>
-            <filter id="s" x="-2" y="-2" width="${w+4}" height="36"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="0" dy="1"/><feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-            <filter id="ts" x="-2" y="-2" width="${w+4}" height="36"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/></filter>
+            <filter id="s" x="-4" y="-4" width="${w+8}" height="${svgH+8}"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="0" dy="1"/><feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="ts" x="-2" y="-2" width="${w+4}" height="${svgH+4}"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/></filter>
         </defs>
         <g filter="url(#s)">
-            <path d="M${bodyL + r},${bodyT} L${bodyR - r},${bodyT} Q${bodyR},${bodyT} ${bodyR},${bodyT + r} L${bodyR},${bodyB - r} Q${bodyR},${bodyB} ${bodyR - r},${bodyB} L${cx + 5},${bodyB} L${cx},${bodyB + 8} L${cx - 5},${bodyB} L${bodyL + r},${bodyB} Q${bodyL},${bodyB} ${bodyL},${bodyB - r} L${bodyL},${bodyT + r} Q${bodyL},${bodyT} ${bodyL + r},${bodyT} Z" fill="rgba(20,20,25,0.5)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+            <rect x="${bodyX}" y="${bodyY}" width="${bodyW}" height="${bodyH}" rx="8" fill="rgba(20,20,25,0.5)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+            <polygon points="${cx-tailW},${bodyB} ${cx},${bodyB+tailH} ${cx+tailW},${bodyB}" fill="rgba(20,20,25,0.5)"/>
         </g>
-        <text x="${cx}" y="15" font-size="${fSize}" font-family="Arial" fill="rgba(0,0,0,0.5)" text-anchor="middle" filter="url(#ts)">${escaped}</text>
-        <text x="${cx}" y="15" font-size="${fSize}" font-family="Arial" fill="#ffffff" text-anchor="middle">${escaped}</text>
+        <text x="${cx}" y="${Math.round(bodyY + bodyH/2 + fSize/3)}" font-size="${fSize}" font-family="Arial" fill="rgba(0,0,0,0.5)" text-anchor="middle" filter="url(#ts)">${escaped}</text>
+        <text x="${cx}" y="${Math.round(bodyY + bodyH/2 + fSize/3)}" font-size="${fSize}" font-family="Arial" fill="#ffffff" text-anchor="middle">${escaped}</text>
     </svg>`;
     return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 }
@@ -823,11 +827,12 @@ function renderInfoPlacemarks(p) {
     p.info.forEach((inf, idx) => {
         const coords = [inf.lat, inf.lon];
         const tw = Math.min(inf.text.length * 7.2, 150);
-        const svgW = Math.max(Math.round(tw + 22), 20);
+        const bodyW = Math.max(tw, 20);
+        const svgW = Math.round(bodyW + 16);
         const pm = new ymaps.Placemark(coords, {}, {
             iconLayout: 'default#image',
             iconImageHref: getInfoLabelSvg(inf.text || ''),
-            iconImageSize: [svgW, 30],
+            iconImageSize: [svgW, 29],
             iconImageOffset: [-Math.round(svgW/2), -28],
             draggable: true,
             zIndex: 900
