@@ -87,7 +87,7 @@ const APP = {
     _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null,
     _driveActive: false, _driveRaf: null, _driveMarker: null, _driveShowFrom: -1,
     _userMarkerEl: null, markerRotation: 0,
-    _markerAnim: null, _lastMarkerPos: null
+    _markerAnim: null, _lastMarkerPos: null, _currentDisplayAz: 0
 };
 
 const $ = id => document.getElementById(id);
@@ -131,7 +131,7 @@ function updateUserMarkerRotation() {
     const arrow = APP._userMarkerEl.querySelector('#user-arrow');
     if (arrow) {
         const mapAz = (APP.map.azimuth || 0) * (180 / Math.PI);
-        const targetRotation = APP.lastAz + mapAz;
+        const targetRotation = APP._currentDisplayAz + mapAz;
         let delta = ((targetRotation - APP.markerRotation + 180) % 360) - 180;
         APP.markerRotation += delta;
         arrow.setAttribute('transform', `rotate(${APP.markerRotation}, 20, 20)`);
@@ -177,10 +177,13 @@ function setMapLocation(center, zoom, azimuth, duration = 400) {
     APP.map.update(params);
 }
 
-function animateMarkerTo(lat, lng) {
+function animateMarkerTo(lat, lng, fromAz, toAz) {
     if (APP._markerAnim) cancelAnimationFrame(APP._markerAnim);
     const fromPos = APP._lastMarkerPos || [lat, lng];
     const fromLng = fromPos[1], fromLat = fromPos[0];
+    let dAz = toAz - fromAz;
+    if (dAz > 180) dAz -= 360;
+    if (dAz < -180) dAz += 360;
     const start = performance.now();
     const duration = 900;
     function frame(time) {
@@ -189,6 +192,8 @@ function animateMarkerTo(lat, lng) {
         const curLng = fromLng + (lng - fromLng) * t;
         APP.userMarker.update({ coordinates: [curLng, curLat] });
         APP._lastMarkerPos = [curLat, curLng];
+        APP._currentDisplayAz = ((fromAz + dAz * t) % 360 + 360) % 360;
+        updateUserMarkerRotation();
         if (t < 1) {
             APP._markerAnim = requestAnimationFrame(frame);
         } else {
@@ -319,10 +324,11 @@ function initGeolocation() {
 
             if (APP.userMarker && APP._userMarkerEl) {
                 if (APP._lastMarkerPos) {
-                    animateMarkerTo(coords[0], coords[1]);
+                    animateMarkerTo(coords[0], coords[1], APP._currentDisplayAz, APP.lastAz);
                 } else {
                     APP.userMarker.update({ coordinates: [coords[1], coords[0]] });
                     APP._lastMarkerPos = coords;
+                    APP._currentDisplayAz = APP.lastAz;
                 }
                 updateUserMarkerRotation();
             }
