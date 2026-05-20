@@ -196,9 +196,15 @@ function animateMarkerTo(lat, lng, fromAz, toAz) {
         updateUserMarkerRotation();
         if (APP.autoCenter && APP.map) {
             if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
+                let curMapAzDeg = 0;
+                try { curMapAzDeg = ((APP.map.azimuth || 0) * 180 / Math.PI); } catch (e) {}
+                const targetDeg = -APP._currentDisplayAz;
+                let diff = targetDeg - curMapAzDeg;
+                diff = ((diff + 180) % 360) - 180;
+                curMapAzDeg += diff * 0.1;
                 APP.map.update({
                     location: { center: [curLng, curLat], duration: 0 },
-                    camera: { azimuth: -APP._currentDisplayAz * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
+                    camera: { azimuth: curMapAzDeg * Math.PI / 180, tilt: APP.lastTilt, duration: 0 }
                 });
             } else {
                 APP.map.update({
