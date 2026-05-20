@@ -1632,6 +1632,10 @@ select.cmd-select {
 .info-points-body {
     padding: 8px 0 4px;
 }
+.info-points-body .comm-input {
+    margin: 6px 8px 4px;
+    width: auto;
+}
 .info-point-row {
     display: flex;
     align-items: center;

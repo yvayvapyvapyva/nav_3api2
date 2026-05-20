@@ -855,9 +855,7 @@ function updateInfoPointsUI(p) {
     const cards = document.querySelectorAll('.sortable-point-item');
     for (const card of cards) {
         if (parseInt(card.dataset.id) === p.id) {
-            const countEl = card.querySelector('.info-count');
             const listEl = card.querySelector('.info-points-list');
-            if (countEl) countEl.textContent = p.info ? p.info.length : 0;
             if (listEl && listEl.closest('.info-points-body')?.style.display !== 'none') {
                 rebuildInfoPointList(listEl, p, card);
             }
@@ -883,8 +881,6 @@ function rebuildInfoPointList(listEl, p, card) {
         row.querySelector('.info-del-btn').addEventListener('click', () => {
             deleteInfoPoint(idx, p);
             rebuildInfoPointList(listEl, p, card);
-            const countEl = card.querySelector('.info-count');
-            if (countEl) countEl.textContent = p.info ? p.info.length : 0;
         });
         listEl.appendChild(row);
     });
@@ -1085,7 +1081,7 @@ async function executeDeletePoint() {
 
 function createPointCard(p, single = false) {
     const item = document.createElement('div'); item.className = 'sortable-point-item'; item.dataset.id = p.id;
-    item.innerHTML = `${!single ? '<div class="sort-handle">☰</div>' : ''}<div class="item-main-row"><div class="point-number-text">${p.id || '?'}</div><div class="color-indicator-btn" style="background:${COLORS[p.color].hex}"></div><select class="cmd-select"></select></div><textarea class="comm-input" placeholder="комментарий">${p.comm || ''}</textarea><div class="info-points-wrap"><div class="info-points-toggle"><span>📌 Инфоточки (<span class="info-count">${(p.info || []).length}</span>)</span><span class="info-arrow">▶</span></div><div class="info-points-body" style="display:none"><div class="info-points-list"></div><button class="btn-info-add">➕ Добавить инфоточку</button></div></div><div class="item-actions"><button class="btn-item-action btn-path">🖋️ Изменить путь</button><button class="btn-item-action btn-del" style="color:var(--danger)">🗑️ Удалить</button></div>`;
+    item.innerHTML = `${!single ? '<div class="sort-handle">☰</div>' : ''}<div class="item-main-row"><div class="point-number-text">${p.id || '?'}</div><div class="color-indicator-btn" style="background:${COLORS[p.color].hex}"></div><select class="cmd-select"></select></div><div class="info-points-wrap"><div class="info-points-toggle"><span>Дополнительная информация</span><span class="info-arrow">▶</span></div><div class="info-points-body" style="display:none"><div class="info-points-list"></div><textarea class="comm-input" placeholder="комментарий">${p.comm || ''}</textarea><button class="btn-info-add">➕ Добавить инфоточку</button></div></div><div class="item-actions"><button class="btn-item-action btn-path">🖋️ Изменить путь</button><button class="btn-item-action btn-del" style="color:var(--danger)">🗑️ Удалить</button></div>`;
 
 const sel = item.querySelector('.cmd-select');
     updateCommandOptions(sel, p.color, p.cmd);
