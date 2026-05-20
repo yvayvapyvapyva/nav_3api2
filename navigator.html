@@ -359,7 +359,10 @@ function initGeolocation() {
 function toggleAutoCenter() {
     APP.autoCenter = !APP.autoCenter;
     $('locateBtn').classList.toggle('active', APP.autoCenter);
-    if (APP.autoCenter) stopDrive();
+    if (APP.autoCenter) {
+        stopDrive();
+        try { APP.lastTilt = APP.map.camera.tilt; } catch (e) {}
+    }
     if (APP.autoCenter && APP.lastPos) {
         if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
             APP.map.update({
