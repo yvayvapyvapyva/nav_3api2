@@ -903,6 +903,7 @@ function addInfoPoint(coords, p) {
     updateInfoPointsUI(p);
     pushHistorySnapshot();
     updateSaveState();
+    stopAddingInfo();
 }
 
 function deleteInfoPoint(idx, p) {
