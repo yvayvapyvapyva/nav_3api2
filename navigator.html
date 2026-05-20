@@ -87,7 +87,7 @@ const APP = {
     _isScheme: true, _schemeLayer: null, _featuresLayer: null, _buildings: null,
     _driveActive: false, _driveRaf: null, _driveMarker: null, _driveShowFrom: -1,
     _userMarkerEl: null, markerRotation: 0,
-    _markerAnim: null, _lastMarkerPos: null, _currentDisplayAz: 0
+    _markerAnim: null, _lastMarkerPos: null, _currentDisplayAz: 0, _prevAnim: null
 };
 
 const $ = id => document.getElementById(id);
@@ -172,7 +172,7 @@ function setMapLocation(center, zoom, azimuth, duration = 400) {
     if (azimuth !== undefined) {
         const targetDeg = ((azimuth % 360) + 360) % 360;
         let curDeg = 0;
-        try { curDeg = ((APP.map.camera.azimuth * 180 / Math.PI) % 360 + 360) % 360; } catch (e) {}
+        try { curDeg = -(APP.map.azimuth * 180 / Math.PI); } catch (e) {}
         let diff = targetDeg - curDeg;
         while (diff > 180) diff -= 360;
         while (diff < -180) diff += 360;
@@ -224,6 +224,7 @@ function stopDrive() {
     APP._driveShowFrom = -1;
     if (APP._driveRaf) { cancelAnimationFrame(APP._driveRaf); APP._driveRaf = null; }
     if (APP._driveMarker) { APP.map.removeChild(APP._driveMarker); APP._driveMarker = null; }
+    if (APP._prevAnim) { cancelAnimationFrame(APP._prevAnim); APP._prevAnim = null; }
 }
 
 function driveAlongPath(fromIdx) {
@@ -247,7 +248,7 @@ function driveAlongPath(fromIdx) {
     APP._driveActive = true;
     const startTime = performance.now();
     let smoothAz = APP.lastAz;
-    try { smoothAz = ((APP.map.camera.azimuth * 180 / Math.PI) % 360 + 360) % 360; } catch (e) {
+    try { smoothAz = -(APP.map.azimuth * 180 / Math.PI); } catch (e) {
         if (path.length >= 2) smoothAz = calcAzimuth(path[0], path[1]);
     }
     let lastFrameTime = 0;
@@ -290,7 +291,7 @@ function driveAlongPath(fromIdx) {
         let diff = targetAz - smoothAz;
         while (diff > 180) diff -= 360;
         while (diff < -180) diff += 360;
-        smoothAz += diff * 0.3;
+        smoothAz += diff * 0.08;
         setMapLocation([lat, lon], undefined, ((smoothAz % 360) + 360) % 360, 0);
         if (APP._driveMarker) APP._driveMarker.update({ coordinates: [lon, lat] });
         APP._driveRaf = requestAnimationFrame(frame);
@@ -588,8 +589,8 @@ function showPreview(i) {
     updateHud();
     renderRoutePoints();
 
-    if (p.lat && p.lon) {
-        setMapLocation([p.lat, p.lon], undefined, undefined);
+    if (p.lat && p.lon && APP.map) {
+        APP.map.update({ location: { center: [p.lon, p.lat], duration: 1000 } });
     }
 }
 
