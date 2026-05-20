@@ -796,15 +796,23 @@ function addP(coords, data = null, silent = false) {
 }
 
 function getInfoLabelSvg(text) {
-    const fSize = 11;
-    const textW = Math.min(text.length * 7, 140);
-    const w = Math.round(textW + 36);
+    const fSize = 12;
+    const r = 8;
+    const textW = Math.min(text.length * 7.2, 150);
+    const w = Math.round(Math.max(textW + 22, 20));
+    const cx = Math.round(w / 2);
     const escaped = text.replace(/["&<>]/g, c => ({'"':'&quot;','&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="24">
-        <rect x="0" y="2" width="${w-2}" height="20" rx="10" fill="rgba(60,60,70,0.85)" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>
-        <circle cx="13" cy="12" r="7" fill="#8b8f99"/>
-        <text x="13" y="15" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle" fill="#fff">i</text>
-        <text x="24" y="15" font-size="${fSize}" font-family="Arial" fill="#f0f0f0">${escaped}</text>
+    const bodyL = 5 + r, bodyR = w - 3 - r, bodyT = 3, bodyB = 20;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="30">
+        <defs>
+            <filter id="s" x="-2" y="-2" width="${w+4}" height="36"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="0" dy="1"/><feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="ts" x="-2" y="-2" width="${w+4}" height="36"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/></filter>
+        </defs>
+        <g filter="url(#s)">
+            <path d="M${bodyL + r},${bodyT} L${bodyR - r},${bodyT} Q${bodyR},${bodyT} ${bodyR},${bodyT + r} L${bodyR},${bodyB - r} Q${bodyR},${bodyB} ${bodyR - r},${bodyB} L${cx + 5},${bodyB} L${cx},${bodyB + 8} L${cx - 5},${bodyB} L${bodyL + r},${bodyB} Q${bodyL},${bodyB} ${bodyL},${bodyB - r} L${bodyL},${bodyT + r} Q${bodyL},${bodyT} ${bodyL + r},${bodyT} Z" fill="rgba(20,20,25,0.5)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+        </g>
+        <text x="${cx}" y="15" font-size="${fSize}" font-family="Arial" fill="rgba(0,0,0,0.5)" text-anchor="middle" filter="url(#ts)">${escaped}</text>
+        <text x="${cx}" y="15" font-size="${fSize}" font-family="Arial" fill="#ffffff" text-anchor="middle">${escaped}</text>
     </svg>`;
     return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 }
@@ -814,11 +822,13 @@ function renderInfoPlacemarks(p) {
     if (!p.info || !p.info.length) return;
     p.info.forEach((inf, idx) => {
         const coords = [inf.lat, inf.lon];
+        const tw = Math.min(inf.text.length * 7.2, 150);
+        const svgW = Math.max(Math.round(tw + 22), 20);
         const pm = new ymaps.Placemark(coords, {}, {
             iconLayout: 'default#image',
             iconImageHref: getInfoLabelSvg(inf.text || ''),
-            iconImageSize: [Math.min(inf.text.length * 7 + 36, 176), 24],
-            iconImageOffset: [0, -12],
+            iconImageSize: [svgW, 30],
+            iconImageOffset: [-Math.round(svgW/2), -28],
             draggable: true,
             zIndex: 900
         });
@@ -827,15 +837,6 @@ function renderInfoPlacemarks(p) {
             p.info[idx].lat = f6(c[0]);
             p.info[idx].lon = f6(c[1]);
             updateSaveState();
-        });
-        pm.events.add('click', () => {
-            const newText = prompt('Текст информационной точки:', p.info[idx].text);
-            if (newText !== null) {
-                p.info[idx].text = newText;
-                renderInfoPlacemarks(p);
-                updateInfoPointsUI(p);
-                updateSaveState();
-            }
         });
         map.geoObjects.add(pm);
         p.infoPlacemarks.push(pm);
