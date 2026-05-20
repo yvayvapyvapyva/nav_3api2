@@ -130,11 +130,6 @@ function updateUserMarkerRotation() {
     if (!APP._userMarkerEl || APP.lastAz === null || !APP.map) return;
     const arrow = APP._userMarkerEl.querySelector('#user-arrow');
     if (arrow) {
-        if (APP.autoCenter) {
-            APP.markerRotation = 0;
-            arrow.setAttribute('transform', 'rotate(0, 20, 20)');
-            return;
-        }
         const mapAz = (APP.map.azimuth || 0) * (180 / Math.PI);
         const targetRotation = APP._currentDisplayAz + mapAz;
         let delta = ((targetRotation - APP.markerRotation + 180) % 360) - 180;
