@@ -131,7 +131,8 @@ const APP = {
     _driveActive: false, _driveRaf: null, _driveMarker: null, _driveShowFrom: -1,
     _driveSpeed: 60,
     _userMarkerEl: null, markerRotation: 0,
-    _markerAnim: null, _lastMarkerPos: null, _currentDisplayAz: 0, _prevAnim: null
+    _markerAnim: null, _lastMarkerPos: null, _currentDisplayAz: 0, _prevAnim: null,
+    _infoMarkers: []
 };
 
 const $ = id => document.getElementById(id);
@@ -499,9 +500,35 @@ function updateRouteNameDisplay() {
     el.style.display = name ? 'block' : 'none';
 }
 
+function clearInfoMarkers() {
+    APP._infoMarkers.forEach(m => { if (APP.map) APP.map.removeChild(m); });
+    APP._infoMarkers = [];
+}
+
+function renderInfoMarkers() {
+    clearInfoMarkers();
+    if (!APP.map) return;
+    const idx = APP.navPreviewIndex >= 0 ? APP.navPreviewIndex : APP.navCurrentIndex;
+    const pt = APP.navPoints[idx];
+    if (!pt || !pt.info || !pt.info.length) return;
+    pt.info.forEach(inf => {
+        const el = document.createElement('div');
+        el.textContent = inf.text || '';
+        el.style.cssText = 'display:flex;align-items:center;gap:4px;background:rgba(0,0,0,0.7);color:#fff;padding:2px 10px 2px 6px;border-radius:12px;font-size:13px;white-space:nowrap;transform:translate(-50%,-50%);';
+        const badge = document.createElement('span');
+        badge.style.cssText = 'width:16px;height:16px;border-radius:50%;background:#8b8f99;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:4px;';
+        badge.textContent = 'i';
+        el.prepend(badge);
+        const marker = new ymaps3.YMapMarker({ coordinates: [inf.lon, inf.lat] }, el);
+        APP.map.addChild(marker);
+        APP._infoMarkers.push(marker);
+    });
+}
+
 function clearRoute() {
     stopDrive();
     removeRouteObjects();
+    clearInfoMarkers();
     APP.navPoints = [];
     APP.navCurrentIndex = 0;
     APP.navPreviewIndex = -1;
@@ -568,6 +595,7 @@ function renderRoutePoints() {
             if (pt.placemark) map.addChild(pt.placemark);
         }
     }
+    renderInfoMarkers();
     updateHud();
 }
 
@@ -766,6 +794,7 @@ function processRouteData(data) {
             color: d.color, hex: COLORS[d.color]?.hex || '#007AFF',
             cmd: (d.cmd || d.comm || `Т${i + 1}`).trim(),
             comm: d.comm || '', pts: pts,
+            info: d.info || [],
             az: pts.length >= 2 ? calcAzimuth(pts[0], pts[1]) : 0
         };
     }).filter(p => p !== null);

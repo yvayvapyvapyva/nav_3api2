@@ -104,7 +104,7 @@ const TG_BOT_LINK = 'https://t.me/E_ia_bot?startapp=m=';
 
 const TG_ACTIVE = typeof Telegram !== 'undefined' && Telegram.WebApp && !!Telegram.WebApp.initData;
 
-let map, points = [], cur = null, isAdd = false, isDrawing = false, curRoute = null, activeListPoint = null, modalMode = 'list', tempNewPointData = null, userLocPlacemark = null, activePoint = null, settingsRouteFiles = [];
+let map, points = [], cur = null, isAdd = false, isDrawing = false, isAddingInfo = false, curRoute = null, activeListPoint = null, modalMode = 'list', tempNewPointData = null, userLocPlacemark = null, activePoint = null, settingsRouteFiles = [];
 let historyStack = [], historyIndex = -1, lastSavedSnapshot = "[]", toastTimer = null;
 let pendingDeletePoint = null;
 let pendingDeleteSingle = false;
@@ -240,12 +240,13 @@ function calcAzimuth(p1, p2) {
     const x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(lo2 - lo1);
     return Math.round((Math.atan2(y, x) * 180 / Math.PI + 360) % 360);
 }
-const serializePoints = () => JSON.stringify(points.map(p => ({ id: p.id, color: p.color, pts: p.pts, cmd: p.cmd, comm: p.comm })));
+const serializePoints = () => JSON.stringify(points.map(p => ({ id: p.id, color: p.color, pts: p.pts, cmd: p.cmd, comm: p.comm, info: p.info })));
 
 function formatJsonWithPts(data) {
     const items = data.map(p => {
         const ptsStr = JSON.stringify(p.pts);
-        return `  {\n    "id": ${p.id},\n    "color": "${p.color}",\n    "pts": ${ptsStr},\n    "cmd": "${p.cmd.replace(/"/g, '\\"')}",\n    "comm": "${(p.comm || '').replace(/"/g, '\\"')}"\n  }`;
+        const infoStr = p.info && p.info.length ? `,\n    "info": ${JSON.stringify(p.info)}` : '';
+        return `  {\n    "id": ${p.id},\n    "color": "${p.color}",\n    "pts": ${ptsStr},\n    "cmd": "${p.cmd.replace(/"/g, '\\"')}",\n    "comm": "${(p.comm || '').replace(/"/g, '\\"')}"${infoStr}\n  }`;
     });
     return '[\n' + items.join(',\n') + '\n]';
 }
@@ -256,6 +257,7 @@ const clearRouteObjects = () => {
         map.geoObjects.remove(p.lineOutline); 
         if (p.lineAccent) map.geoObjects.remove(p.lineAccent);
         if (p.endPlacemark) map.geoObjects.remove(p.endPlacemark);
+        if (p.infoPlacemarks) p.infoPlacemarks.forEach(m => map.geoObjects.remove(m));
     });
     points = [];
     activePoint = null;
@@ -364,6 +366,11 @@ ymaps.ready(async () => {
     map.geoObjects.add(userLocPlacemark);
     initGeolocation();
     map.events.add('click', e => {
+        if(isAddingInfo && activePoint) {
+            const coords = e.get('coords');
+            addInfoPoint([f6(coords[0]), f6(coords[1])], activePoint);
+            return;
+        }
         if(isAdd && tempNewPointData) {
             const target = e.get('target');
             let coords = e.get('coords');
@@ -577,7 +584,7 @@ const loadRoute = async (routeName) => {
         const data = result.data || [];
         clearRouteObjects();
         curRoute = routeName;
-        data.forEach(d => addP(d.pts[0], d, true));
+        data.forEach(d => { const p = addP(d.pts[0], d, true); renderInfoPlacemarks(p); });
         if(points.length) map.setCenter(points[0].pts[0]);
         recalculateIds();
         seedHistory();
@@ -743,7 +750,9 @@ function addP(coords, data = null, silent = false) {
         color: data?.color || 'Gold', 
         cmd: data?.cmd || '', 
         comm: data?.comm || '', 
-        pts: ptsData, 
+        pts: ptsData,
+        info: data?.info || [],
+        infoPlacemarks: [],
         pm: new ymaps.Placemark(coords, {}, { iconLayout: 'default#imageWithContent', iconImageSize: [40,40], iconImageOffset: [-20,-20], zIndex: 1000 }), 
         line: new ymaps.Polyline(ptsData, {}, { strokeWidth: 4, strokeOpacity: 1, zIndex: 852, interactive: false }), 
         lineOutline: new ymaps.Polyline(ptsData, {}, { strokeWidth: 6, strokeOpacity: 1, zIndex: 850, interactive: false }), 
@@ -786,6 +795,125 @@ function addP(coords, data = null, silent = false) {
     return p;
 }
 
+function getInfoLabelSvg(text) {
+    const fSize = 11;
+    const textW = Math.min(text.length * 7, 140);
+    const w = Math.round(textW + 36);
+    const escaped = text.replace(/["&<>]/g, c => ({'"':'&quot;','&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="24">
+        <rect x="0" y="2" width="${w-2}" height="20" rx="10" fill="rgba(60,60,70,0.85)" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>
+        <circle cx="13" cy="12" r="7" fill="#8b8f99"/>
+        <text x="13" y="15" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle" fill="#fff">i</text>
+        <text x="24" y="15" font-size="${fSize}" font-family="Arial" fill="#f0f0f0">${escaped}</text>
+    </svg>`;
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
+
+function renderInfoPlacemarks(p) {
+    clearInfoPlacemarks(p);
+    if (!p.info || !p.info.length) return;
+    p.info.forEach((inf, idx) => {
+        const coords = [inf.lat, inf.lon];
+        const pm = new ymaps.Placemark(coords, {}, {
+            iconLayout: 'default#image',
+            iconImageHref: getInfoLabelSvg(inf.text || ''),
+            iconImageSize: [Math.min(inf.text.length * 7 + 36, 176), 24],
+            iconImageOffset: [0, -12],
+            draggable: true,
+            zIndex: 900
+        });
+        pm.events.add('dragend', () => {
+            const c = pm.geometry.getCoordinates();
+            p.info[idx].lat = f6(c[0]);
+            p.info[idx].lon = f6(c[1]);
+            updateSaveState();
+        });
+        pm.events.add('click', () => {
+            const newText = prompt('Текст информационной точки:', p.info[idx].text);
+            if (newText !== null) {
+                p.info[idx].text = newText;
+                renderInfoPlacemarks(p);
+                updateInfoPointsUI(p);
+                updateSaveState();
+            }
+        });
+        map.geoObjects.add(pm);
+        p.infoPlacemarks.push(pm);
+    });
+}
+
+function clearInfoPlacemarks(p) {
+    if (p.infoPlacemarks) {
+        p.infoPlacemarks.forEach(m => map.geoObjects.remove(m));
+        p.infoPlacemarks = [];
+    }
+}
+
+function updateInfoPointsUI(p) {
+    const modal = $('pointsOrderModal');
+    if (!modal || modal.style.display === 'none') return;
+    const cards = document.querySelectorAll('.sortable-point-item');
+    for (const card of cards) {
+        if (parseInt(card.dataset.id) === p.id) {
+            const countEl = card.querySelector('.info-count');
+            const listEl = card.querySelector('.info-points-list');
+            if (countEl) countEl.textContent = p.info ? p.info.length : 0;
+            if (listEl && listEl.closest('.info-points-body')?.style.display !== 'none') {
+                rebuildInfoPointList(listEl, p, card);
+            }
+            break;
+        }
+    }
+}
+
+function rebuildInfoPointList(listEl, p, card) {
+    listEl.innerHTML = '';
+    if (!p.info) return;
+    p.info.forEach((inf, idx) => {
+        const row = document.createElement('div');
+        row.className = 'info-point-row';
+        row.innerHTML = `<span class="info-coords">${f6(inf.lat)}, ${f6(inf.lon)}</span>
+<input class="info-text-input" value="${inf.text.replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="Текст">
+<button class="info-del-btn" data-idx="${idx}">✕</button>`;
+        const inp = row.querySelector('.info-text-input');
+        inp.addEventListener('input', () => {
+            p.info[idx].text = inp.value;
+            renderInfoPlacemarks(p);
+            updateSaveState();
+        });
+        row.querySelector('.info-del-btn').addEventListener('click', () => {
+            deleteInfoPoint(idx, p);
+            rebuildInfoPointList(listEl, p, card);
+            const countEl = card.querySelector('.info-count');
+            if (countEl) countEl.textContent = p.info ? p.info.length : 0;
+        });
+        listEl.appendChild(row);
+    });
+}
+
+function addInfoPoint(coords, p) {
+    p.info.push({ lat: coords[0], lon: coords[1], text: '' });
+    renderInfoPlacemarks(p);
+    updateInfoPointsUI(p);
+    pushHistorySnapshot();
+    updateSaveState();
+}
+
+function deleteInfoPoint(idx, p) {
+    if (idx < 0 || idx >= p.info.length) return;
+    p.info.splice(idx, 1);
+    renderInfoPlacemarks(p);
+    pushHistorySnapshot();
+    updateSaveState();
+}
+
+function stopAddingInfo() {
+    isAddingInfo = false;
+    $('addText').textContent = "Добавить новую точку";
+    $('addMarkerBtn').classList.remove('active');
+    map.setCursor('grab');
+}
+
 const startDrawingForPoint = (p, isNewPoint = false) => {
     isAdd = false;
     isDrawing = true;
@@ -814,7 +942,8 @@ const stopDrawingMode = async () => {
     showToast("Изменения сохранены", "success");
 };
 const handleAddBtnClick = () => {
-    if (isDrawing) { stopDrawingMode(); }
+    if (isAddingInfo) { stopAddingInfo(); }
+    else if (isDrawing) { stopDrawingMode(); }
     else if (isAdd) { stopAdd(); }
     else { openCreatePointModal(); }
 };
@@ -932,7 +1061,7 @@ async function executeDeletePoint() {
 
 function createPointCard(p, single = false) {
     const item = document.createElement('div'); item.className = 'sortable-point-item'; item.dataset.id = p.id;
-    item.innerHTML = `${!single ? '<div class="sort-handle">☰</div>' : ''}<div class="item-main-row"><div class="point-number-text">${p.id || '?'}</div><div class="color-indicator-btn" style="background:${COLORS[p.color].hex}"></div><select class="cmd-select"></select></div><textarea class="comm-input" placeholder="комментарий">${p.comm || ''}</textarea><div class="item-actions"><button class="btn-item-action btn-path">🖋️ Изменить путь</button><button class="btn-item-action btn-del" style="color:var(--danger)">🗑️ Удалить</button></div>`;
+    item.innerHTML = `${!single ? '<div class="sort-handle">☰</div>' : ''}<div class="item-main-row"><div class="point-number-text">${p.id || '?'}</div><div class="color-indicator-btn" style="background:${COLORS[p.color].hex}"></div><select class="cmd-select"></select></div><textarea class="comm-input" placeholder="комментарий">${p.comm || ''}</textarea><div class="info-points-wrap"><div class="info-points-toggle"><span>📌 Инфоточки (<span class="info-count">${(p.info || []).length}</span>)</span><span class="info-arrow">▶</span></div><div class="info-points-body" style="display:none"><div class="info-points-list"></div><button class="btn-info-add">➕ Добавить инфоточку</button></div></div><div class="item-actions"><button class="btn-item-action btn-path">🖋️ Изменить путь</button><button class="btn-item-action btn-del" style="color:var(--danger)">🗑️ Удалить</button></div>`;
 
 const sel = item.querySelector('.cmd-select');
     updateCommandOptions(sel, p.color, p.cmd);
@@ -949,6 +1078,26 @@ const sel = item.querySelector('.cmd-select');
     };
     item.querySelector('.btn-del').onclick = () => { confirmDeletePoint(p, single); };
     item.querySelector('.btn-path').onclick = () => { toggleM('pointsOrderModal'); startEditPath(p); };
+
+    const infoWrap = item.querySelector('.info-points-wrap');
+    const infoToggle = infoWrap.querySelector('.info-points-toggle');
+    const infoBody = infoWrap.querySelector('.info-points-body');
+    const infoList = infoWrap.querySelector('.info-points-list');
+    infoToggle.onclick = () => {
+        const isOpen = infoBody.style.display !== 'none';
+        infoBody.style.display = isOpen ? 'none' : 'block';
+        infoToggle.querySelector('.info-arrow').textContent = isOpen ? '▶' : '▼';
+        if (!isOpen) rebuildInfoPointList(infoList, p, item);
+    };
+    infoWrap.querySelector('.btn-info-add').onclick = () => {
+        toggleM('pointsOrderModal');
+        activePoint = p;
+        isAddingInfo = true;
+        $('addText').textContent = "Кликните на карте для добавления инфоточки";
+        $('addMarkerBtn').classList.add('active');
+        map.setCursor('crosshair');
+        showToast('Кликните на карте, чтобы разместить информационную точку', 'info');
+    };
     return item;
 }
 async function delPoint(p) {
@@ -958,6 +1107,7 @@ async function delPoint(p) {
     map.geoObjects.remove(p.lineOutline);
     if(p.lineAccent) map.geoObjects.remove(p.lineAccent);
     if(p.endPlacemark) map.geoObjects.remove(p.endPlacemark);
+    clearInfoPlacemarks(p);
     if (activePoint === p) activePoint = null;
     recalculateIds();
     setActivePoint(points[0] || null);
@@ -1027,7 +1177,7 @@ async function saveGist() {
     btn.classList.add('loading');
     if (topSaveBtn) { topSaveBtn.disabled = true; topSaveBtn.textContent = 'Сохраняем...'; }
     try {
-        const data = points.map(p => ({ id: p.id, color: p.color, pts: p.pts, cmd: p.cmd, comm: p.comm }));
+        const data = points.map(p => ({ id: p.id, color: p.color, pts: p.pts, cmd: p.cmd, comm: p.comm, info: p.info }));
         const result = await callYcFunction('save', { m: curRoute }, { data, category: currentRouteMeta.category || '' });
         if(result && !result.error) {
             lastSavedSnapshot = serializePoints();
