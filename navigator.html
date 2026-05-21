@@ -955,7 +955,7 @@ ymaps3.ready.then(async () => {
     }
 
     $('locateBtn').addEventListener('click', toggleAutoCenter);
-    $('commentBlock').addEventListener('click', () => $('commentBlock').classList.remove('visible'));
+    $('commentBlock').addEventListener('click', () => { $('commentBlock').classList.remove('visible'); clearInfoMarkers(); });
     $('mapTypeBtn').addEventListener('click', toggleMapType);
     $('tiltBtn').addEventListener('click', toggleTilt);
     $('speedSlider').addEventListener('input', function() {
