@@ -814,7 +814,7 @@ function getInfoLabelSvg(text) {
         return `<tspan x="${cx}" dy="${i ? lineH : 0}">${e}</tspan>`;
     };
     const tbody = lines.map((l, i) => tspan(l, i)).join('');
-    const baseY = Math.round(bodyY + (bodyH - lines.length * lineH) / 2 + fSize / 3);
+    const baseY = Math.round(bodyY + (bodyH - lines.length * lineH) / 2 + lineH * 0.7);
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${svgH}">
         <defs>
             <filter id="s" x="-4" y="-4" width="${w+8}" height="${svgH+8}"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="0" dy="1"/><feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
