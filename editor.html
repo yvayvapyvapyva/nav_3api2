@@ -801,8 +801,8 @@ function getInfoLabelSvg(text) {
     const padX = 8;
     const lines = text.split('\n');
     const maxLine = lines.reduce((a, l) => l.length > a ? l.length : a, 0);
-    const textW = Math.min(maxLine * 7.2, 150);
-    const bodyW = Math.max(textW, 20);
+    const textW = Math.min(maxLine * 8, 150);
+    const bodyW = Math.max(textW + 8, 24);
     const bodyH = Math.max(lines.length * lineH, 20);
     const w = Math.round(bodyW + padX * 2);
     const cx = Math.round(w / 2);
@@ -838,8 +838,8 @@ function renderInfoPlacemarks(p) {
         const txt = inf.text || '';
         const lines = txt.split('\n');
         const maxLine = lines.reduce((a, l) => l.length > a ? l.length : a, 0);
-        const tw = Math.min(maxLine * 7.2, 150);
-        const bodyW = Math.max(tw, 20);
+        const tw = Math.min(maxLine * 8, 150);
+        const bodyW = Math.max(tw + 8, 24);
         const svgW = Math.round(bodyW + 16);
         const lineH = 16;
         const bodyH = Math.max(lines.length * lineH, 20);
