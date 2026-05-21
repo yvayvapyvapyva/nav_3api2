@@ -842,7 +842,7 @@ function renderInfoPlacemarks(p) {
         const bodyW = Math.max(tw + 8, 24);
         const svgW = Math.round(bodyW + 16);
         const lineH = 16;
-        const bodyH = Math.max(lines.length * lineH + 8, 24);
+        const bodyH = Math.max(lines.length * lineH, 20);
         const svgH = bodyH + 9;
         const pm = new ymaps.Placemark(coords, {}, {
             iconLayout: 'default#image',
@@ -1100,7 +1100,7 @@ async function executeDeletePoint() {
 
 function createPointCard(p, single = false) {
     const item = document.createElement('div'); item.className = 'sortable-point-item'; item.dataset.id = p.id;
-    item.innerHTML = `${!single ? '<div class="sort-handle">☰</div>' : ''}<div class="item-main-row"><div class="point-number-text">${p.id || '?'}</div><div class="color-indicator-btn" style="background:${COLORS[p.color].hex}"></div><select class="cmd-select"></select></div><div class="info-points-wrap"><div class="info-points-toggle"><span>Дополнительная информация</span><span class="info-arrow">▶</span></div><div class="info-points-body" style="display:none"><textarea class="comm-input" placeholder="комментарий">${p.comm || ''}</textarea><div class="info-points-list"></div><button class="btn-info-add">➕ Добавить инфоточку</button></div></div><div class="item-actions"><button class="btn-item-action btn-path">🖋️ Изменить путь</button><button class="btn-item-action btn-del" style="color:var(--danger)">🗑️ Удалить</button></div>`;
+    item.innerHTML = `${!single ? '<div class="sort-handle">☰</div>' : ''}<div class="item-main-row"><div class="point-number-text">${p.id || '?'}</div><div class="color-indicator-btn" style="background:${COLORS[p.color].hex}"></div><select class="cmd-select"></select></div><div class="info-points-wrap"><div class="info-points-toggle"><span>Дополнительная информация</span><span class="info-arrow">▶</span></div><div class="info-points-body" style="display:none"><textarea class="comm-input" placeholder="комментарий">${p.comm || ''}</textarea><div style="font-size:12px;color:rgba(255,255,255,0.5);padding:4px 8px 2px">Инфоточки</div><div class="info-points-list"></div><button class="btn-info-add">➕ Добавить инфоточку</button></div></div><div class="item-actions"><button class="btn-item-action btn-path">🖋️ Изменить путь</button><button class="btn-item-action btn-del" style="color:var(--danger)">🗑️ Удалить</button></div>`;
 
 const sel = item.querySelector('.cmd-select');
     updateCommandOptions(sel, p.color, p.cmd);
