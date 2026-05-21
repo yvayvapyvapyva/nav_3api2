@@ -842,7 +842,7 @@ function renderInfoPlacemarks(p) {
         const bodyW = Math.max(tw + 8, 24);
         const svgW = Math.round(bodyW + 16);
         const lineH = 16;
-        const bodyH = Math.max(lines.length * lineH, 20);
+        const bodyH = Math.max(lines.length * lineH + 8, 24);
         const svgH = bodyH + 9;
         const pm = new ymaps.Placemark(coords, {}, {
             iconLayout: 'default#image',
