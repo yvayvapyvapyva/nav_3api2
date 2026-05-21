@@ -386,16 +386,30 @@ function initGeolocation() {
             APP.currentSpeed = speed;
 
             if (APP.userMarker && APP._userMarkerEl) {
-                if (APP._lastMarkerPos) {
-                    animateMarkerTo(coords[0], coords[1], APP._currentDisplayAz, APP.lastAz);
-                } else {
-                    try {
-                        const c = APP.map.center;
-                        APP._lastMarkerPos = [c[1], c[0]];
-                    } catch (e) {
-                        APP._lastMarkerPos = coords;
+                if (APP.autoCenter) {
+                    APP._lastMarkerPos = coords;
+                    APP._currentDisplayAz = APP.lastAz;
+                    APP.userMarker.update({ coordinates: [coords[1], coords[0]] });
+                    const camera = { tilt: APP.lastTilt, duration: 0 };
+                    if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
+                        camera.azimuth = -APP.lastAz * Math.PI / 180;
                     }
-                    animateMarkerTo(coords[0], coords[1], APP.lastAz, APP.lastAz);
+                    APP.map.update({
+                        location: { center: [coords[1], coords[0]], duration: 0 },
+                        camera
+                    });
+                } else {
+                    if (APP._lastMarkerPos) {
+                        animateMarkerTo(coords[0], coords[1], APP._currentDisplayAz, APP.lastAz);
+                    } else {
+                        try {
+                            const c = APP.map.center;
+                            APP._lastMarkerPos = [c[1], c[0]];
+                        } catch (e) {
+                            APP._lastMarkerPos = coords;
+                        }
+                        animateMarkerTo(coords[0], coords[1], APP.lastAz, APP.lastAz);
+                    }
                 }
                 updateUserMarkerRotation();
             }
