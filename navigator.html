@@ -521,7 +521,7 @@ function renderInfoMarkers() {
         const el = document.createElement('div');
         el.className = 'info-bubble';
         el.textContent = inf.text || '';
-        el.style.cssText = 'position:relative;background:rgba(20,20,25,0.5);color:#ffffff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;line-height:1.4;white-space:nowrap;border:0.5px solid rgba(255,255,255,0.08);transform:translate(-50%,-100%);';
+        el.style.cssText = 'position:relative;background:rgba(20,20,25,0.5);color:#ffffff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;line-height:1.4;white-space:pre-wrap;border:0.5px solid rgba(255,255,255,0.08);transform:translate(-50%,-100%);';
         const marker = new ymaps3.YMapMarker({ coordinates: [inf.lon, inf.lat] }, el);
         APP.map.addChild(marker);
         APP._infoMarkers.push(marker);

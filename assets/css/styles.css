@@ -1660,6 +1660,8 @@ select.cmd-select {
     color: #f5f7fa;
     outline: none;
     font-family: inherit;
+    resize: none;
+    overflow: hidden;
 }
 .info-text-input:focus {
     border-color: rgba(255,255,255,0.4);

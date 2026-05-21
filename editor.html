@@ -797,15 +797,24 @@ function addP(coords, data = null, silent = false) {
 
 function getInfoLabelSvg(text) {
     const fSize = 12;
+    const lineH = 16;
     const padX = 8;
-    const textW = Math.min(text.length * 7.2, 150);
+    const lines = text.split('\n');
+    const maxLine = lines.reduce((a, l) => l.length > a ? l.length : a, 0);
+    const textW = Math.min(maxLine * 7.2, 150);
     const bodyW = Math.max(textW, 20);
+    const bodyH = Math.max(lines.length * lineH, 20);
     const w = Math.round(bodyW + padX * 2);
     const cx = Math.round(w / 2);
-    const bodyX = padX, bodyY = 1, bodyH = 20, bodyB = bodyY + bodyH;
+    const bodyX = padX, bodyY = 1, bodyB = bodyY + bodyH;
     const tailW = 5, tailH = 7;
     const svgH = bodyB + tailH + 1;
-    const escaped = text.replace(/["&<>]/g, c => ({'"':'&quot;','&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+    const tspan = (l, i) => {
+        const e = l.replace(/["&<>]/g, c => ({'"':'&quot;','&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+        return `<tspan x="${cx}" dy="${i ? lineH : 0}">${e}</tspan>`;
+    };
+    const tbody = lines.map((l, i) => tspan(l, i)).join('');
+    const baseY = Math.round(bodyY + (bodyH - lines.length * lineH) / 2 + fSize / 3);
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${svgH}">
         <defs>
             <filter id="s" x="-4" y="-4" width="${w+8}" height="${svgH+8}"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="0" dy="1"/><feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -815,8 +824,8 @@ function getInfoLabelSvg(text) {
             <rect x="${bodyX}" y="${bodyY}" width="${bodyW}" height="${bodyH}" rx="8" fill="rgba(20,20,25,0.5)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
             <polygon points="${cx-tailW},${bodyB} ${cx},${bodyB+tailH} ${cx+tailW},${bodyB}" fill="rgba(20,20,25,0.5)"/>
         </g>
-        <text x="${cx}" y="${Math.round(bodyY + bodyH/2 + fSize/3)}" font-size="${fSize}" font-family="Arial" fill="rgba(0,0,0,0.5)" text-anchor="middle" filter="url(#ts)">${escaped}</text>
-        <text x="${cx}" y="${Math.round(bodyY + bodyH/2 + fSize/3)}" font-size="${fSize}" font-family="Arial" fill="#ffffff" text-anchor="middle">${escaped}</text>
+        <text x="${cx}" y="${baseY}" font-size="${fSize}" font-family="Arial" fill="rgba(0,0,0,0.5)" text-anchor="middle" filter="url(#ts)">${tbody}</text>
+        <text x="${cx}" y="${baseY}" font-size="${fSize}" font-family="Arial" fill="#ffffff" text-anchor="middle">${tbody}</text>
     </svg>`;
     return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 }
@@ -826,14 +835,20 @@ function renderInfoPlacemarks(p) {
     if (!p.info || !p.info.length) return;
     p.info.forEach((inf, idx) => {
         const coords = [inf.lat, inf.lon];
-        const tw = Math.min(inf.text.length * 7.2, 150);
+        const txt = inf.text || '';
+        const lines = txt.split('\n');
+        const maxLine = lines.reduce((a, l) => l.length > a ? l.length : a, 0);
+        const tw = Math.min(maxLine * 7.2, 150);
         const bodyW = Math.max(tw, 20);
         const svgW = Math.round(bodyW + 16);
+        const lineH = 16;
+        const bodyH = Math.max(lines.length * lineH, 20);
+        const svgH = bodyH + 9;
         const pm = new ymaps.Placemark(coords, {}, {
             iconLayout: 'default#image',
-            iconImageHref: getInfoLabelSvg(inf.text || ''),
-            iconImageSize: [svgW, 29],
-            iconImageOffset: [-Math.round(svgW/2), -28],
+            iconImageHref: getInfoLabelSvg(txt),
+            iconImageSize: [svgW, svgH],
+            iconImageOffset: [-Math.round(svgW/2), -(svgH - 1)],
             zIndex: 900
         });
         pm.events.add('click', () => editInfoPoint(p, idx));
@@ -870,14 +885,18 @@ function rebuildInfoPointList(listEl, p, card) {
     p.info.forEach((inf, idx) => {
         const row = document.createElement('div');
         row.className = 'info-point-row';
-        row.innerHTML = `<input class="info-text-input" value="${inf.text.replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="Текст">
+        row.innerHTML = `<textarea class="info-text-input" placeholder="Текст"></textarea>
 <button class="info-del-btn" data-idx="${idx}">✕</button>`;
         const inp = row.querySelector('.info-text-input');
+        inp.value = inf.text;
+        const autoHeight = () => { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; };
         inp.addEventListener('input', () => {
             p.info[idx].text = inp.value;
             renderInfoPlacemarks(p);
             updateSaveState();
+            autoHeight();
         });
+        setTimeout(autoHeight, 0);
         row.querySelector('.info-del-btn').addEventListener('click', () => {
             deleteInfoPoint(idx, p);
             rebuildInfoPointList(listEl, p, card);
