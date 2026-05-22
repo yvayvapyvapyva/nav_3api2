@@ -85,6 +85,9 @@
     <svg viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
 </button>
 <button id="tiltBtn" class="circle-btn" title="2D / 3D">2D</button>
+<button id="playBtn" class="circle-btn" title="Симуляция проезда">
+    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+</button>
 
 <div id="routeNameDisplay"></div>
 
@@ -234,6 +237,9 @@ function stopDrive() {
     if (APP._driveRaf) { cancelAnimationFrame(APP._driveRaf); APP._driveRaf = null; }
     if (APP._driveMarker) { APP.map.removeChild(APP._driveMarker); APP._driveMarker = null; }
     if (APP._prevAnim) { cancelAnimationFrame(APP._prevAnim); APP._prevAnim = null; }
+    APP.navAudio.onended = null;
+    const pb = $('playBtn');
+    if (pb) pb.classList.remove('active');
 }
 
 function driveAlongPath(fromIdx) {
@@ -598,24 +604,15 @@ function updateHud() {
 
     const prevBtn = $('prevBtn'), nextBtn = $('nextBtn');
     prevBtn.disabled = (idx <= 0);
-    const np = APP.navPoints[idx];
-    const hasPath = np && np.pts && np.pts.length >= 2;
-    nextBtn.disabled = (idx >= APP.navPoints.length - 1 && !hasPath);
+    nextBtn.disabled = (idx >= APP.navPoints.length - 1);
     prevBtn.onclick = () => { stopDrive(); idx > 0 && showPreview(idx - 1); };
-    nextBtn.onclick = () => {
-        if (APP._driveActive) { stopDrive(); showPreview(idx + 1); return; }
-        if (idx >= APP.navPoints.length - 1) {
-            const lp = APP.navPoints[idx];
-            if (lp && lp.pts && lp.pts.length >= 2 && !APP.autoCenter) driveAlongPath(idx);
-            return;
-        }
-        const p = APP.navPoints[idx];
-        if (p && p.pts && p.pts.length >= 2 && !APP.autoCenter) {
-            driveAlongPath(idx);
-        } else {
-            showPreview(idx + 1);
-        }
-    };
+    nextBtn.onclick = () => { if (idx < APP.navPoints.length - 1) { stopDrive(); showPreview(idx + 1); } };
+
+    const playBtn = $('playBtn');
+    if (playBtn) {
+        const hasPath = t && t.pts && t.pts.length >= 2;
+        playBtn.disabled = !hasPath;
+    }
 
     $('commentText').textContent = t.comm;
     $('commentBlock').classList.toggle('visible', t.comm && t.comm.trim() !== '');
@@ -931,6 +928,36 @@ ymaps3.ready.then(async () => {
     $('speedSlider').addEventListener('input', function() {
         APP._driveSpeed = +this.value;
         $('speedValue').textContent = this.value;
+    });
+    $('playBtn').addEventListener('click', () => {
+        if (APP._driveActive) {
+            stopDrive();
+        } else {
+            const idx = APP.navPreviewIndex >= 0 ? APP.navPreviewIndex : APP.navCurrentIndex;
+            const p = APP.navPoints[idx];
+            if (!p || !p.pts || p.pts.length < 2) {
+                showToast('У текущей точки нет пути для симуляции', 'info');
+                return;
+            }
+            $('playBtn').classList.add('active');
+            const startSim = () => {
+                if (!APP._driveActive) driveAlongPath(idx);
+            };
+            APP.navAudio.onended = () => {
+                APP.navAudio.onended = null;
+                startSim();
+            };
+            playCommand(p.cmd);
+            setTimeout(() => {
+                if (!APP._driveActive) {
+                    const hasAudio = !APP.navAudio.paused && APP.navAudio.currentTime > 0;
+                    if (!hasAudio) {
+                        APP.navAudio.onended = null;
+                        driveAlongPath(idx);
+                    }
+                }
+            }, 1000);
+        }
     });
 
     document.getElementById('map').addEventListener('click', (e) => {
