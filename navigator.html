@@ -941,19 +941,6 @@ ymaps3.ready.then(async () => {
     MenuModule.init(loadRouteFromJSON);
     $('loading').classList.add('hidden');
 
-    let lastMapAzimuth = 0;
-    function trackMapAzimuth() {
-        try {
-            const mapAz = (APP.map.azimuth || 0) * (180 / Math.PI);
-            if (Math.abs(mapAz - lastMapAzimuth) > 0.5) {
-                lastMapAzimuth = mapAz;
-                updateUserMarkerRotation();
-            }
-        } catch (e) {}
-        requestAnimationFrame(trackMapAzimuth);
-    }
-    trackMapAzimuth();
-
     document.addEventListener('click', function activateAudio() {
         APP.navAudio.muted = true;
         APP.navAudio.play().catch(() => {});
