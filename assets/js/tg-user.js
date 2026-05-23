@@ -23,5 +23,6 @@ const TG = {
                 window.tgUser = user;
             }
         }
+
     }
 };
