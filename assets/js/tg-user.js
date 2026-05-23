@@ -18,11 +18,13 @@ const TG = {
             Telegram.WebApp.ready();
             Telegram.WebApp.expand();
             try { Telegram.WebApp.requestFullscreen?.(); } catch (e) {}
+            try { Telegram.WebApp.disableVerticalSwipes?.(); } catch (e) {}
             const user = Telegram.WebApp.initDataUnsafe?.user;
             if (user) {
                 window.tgUser = user;
             }
         }
 
+        document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     }
 };
