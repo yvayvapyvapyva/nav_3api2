@@ -66,6 +66,7 @@ html, body {
 [class*="-logo-wrap"] { display: none !important; }
 [class*="-powered"] { display: none !important; }
 [class*="-watermark"] { display: none !important; }
+.ymaps3--controls_bottom.ymaps3--controls_left { display: none !important; }
 
 /* ============================================
    Загрузка
