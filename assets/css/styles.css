@@ -44,8 +44,7 @@ html, body {
     background: var(--bg);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
-    overscroll-behavior: none;
-    position: fixed;
+
 }
 
 /* ============================================
