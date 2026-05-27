@@ -582,7 +582,8 @@ function renderRoutePoints() {
 
 function updateHud() {
     const isPreview = APP.navPreviewIndex >= 0;
-    const idx = isPreview ? APP.navPreviewIndex : APP.navCurrentIndex;
+    let idx = isPreview ? APP.navPreviewIndex : APP.navCurrentIndex;
+    if (idx >= APP.navPoints.length) idx = APP.navPoints.length - 1;
     const t = APP.navPoints[idx];
     if (!t) return;
 
@@ -742,8 +743,8 @@ function navCheckTriggers() {
             renderRoutePoints();
             updateHud();
         } else {
-            $('hudCmd').textContent = "ФИНИШ";
             showToast('Маршрут завершён!', 'success');
+            updateHud();
         }
     }
 }
