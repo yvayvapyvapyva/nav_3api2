@@ -1088,6 +1088,7 @@ async function executeDeletePoint() {
     if (!pendingDeletePoint) return;
     const p = pendingDeletePoint;
     toggleM('confirmDeletePointModal');
+    toggleM('pointsOrderModal');
     pushHistorySnapshot();
     delPoint(p);
     pushHistorySnapshot();
