@@ -1301,9 +1301,9 @@ html, body {
     flex-shrink: 0;
 }
 
-#gpsModeBtn:hover {
-    background: rgba(255,255,255,0.15);
-    transform: scale(1.05);
+#gpsModeBtn:active {
+    background: rgba(30, 30, 30, 0.5);
+    transform: scale(0.92);
 }
 
 .btn-add-main {
