@@ -231,7 +231,7 @@ function getArrowEndSvg(col, az) {
     </svg>`;
     return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 }
-const getUserLocSvg = () => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#007AFF" stroke="white" stroke-width="3"/><circle cx="12" cy="12" r="11" fill="none" stroke="#007AFF" stroke-width="1" opacity="0.3"/></svg>`);
+const getUserLocSvg = () => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#007AFF" stroke="white" stroke-width="2.5"/><circle cx="8" cy="8" r="7.5" fill="none" stroke="#007AFF" stroke-width="1" opacity="0.3"/></svg>`);
 function calcAzimuth(p1, p2) {
     if (!p1 || !p2) return 0;
     const [la1, lo1] = p1.map(v => v * Math.PI / 180);
@@ -362,7 +362,7 @@ ymaps.ready(async () => {
 
     const center = await initMapWithGeolocation();
     map = new ymaps.Map("map", { center: center, zoom: 17, type: 'yandex#satellite', controls: [] });
-    userLocPlacemark = new ymaps.Placemark([0,0], {}, { iconLayout: 'default#image', iconImageHref: getUserLocSvg(), iconImageSize: [24,24], iconImageOffset: [-12,-12], zIndex: 5000, visible: false });
+    userLocPlacemark = new ymaps.Placemark([0,0], {}, { iconLayout: 'default#image', iconImageHref: getUserLocSvg(), iconImageSize: [16,16], iconImageOffset: [-8,-8], zIndex: 5000, visible: false });
     map.geoObjects.add(userLocPlacemark);
     initGeolocation();
     map.events.add('click', e => {
