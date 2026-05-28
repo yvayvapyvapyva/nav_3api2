@@ -997,6 +997,7 @@ function toggleGpsMode() {
             const coords = [position.coords.latitude, position.coords.longitude];
             if (isAdd && tempNewPointData) {
                 const newPoint = addP(coords, { ...tempNewPointData });
+                map.setCenter(coords);
                 pushHistorySnapshot();
                 updateSaveState();
                 setActivePoint(newPoint, false);
