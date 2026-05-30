@@ -285,8 +285,8 @@ const setActivePoint = (p, center = false) => {
     activePoint = p || null;
     points.forEach(pt => {
         const active = activePoint && pt === activePoint;
-        pt.line.options.set({ strokeOpacity: active ? 1 : 0.8 });
-        pt.lineOutline.options.set({ strokeWidth: active ? 8 : 6 });
+        pt.line.options.set({ strokeOpacity: active ? 1 : 0.8, zIndex: active ? 2000 : 852 });
+        pt.lineOutline.options.set({ strokeWidth: active ? 8 : 6, zIndex: active ? 1999 : 850 });
         pt.pm.options.set('zIndex', active ? 1800 : 1000);
         if (pt.endPlacemark) pt.endPlacemark.options.set('zIndex', active ? 1600 : 800);
         updI(pt);
@@ -1026,7 +1026,7 @@ const updI = p => {
     if (p.pts?.length >= 2) {
         if (isCurrent) {
             if (!p.lineAccent) {
-                p.lineAccent = new ymaps.Polyline(p.pts, {}, { strokeWidth: 6, strokeOpacity: 1, zIndex: 851, interactive: false });
+                p.lineAccent = new ymaps.Polyline(p.pts, {}, { strokeWidth: 6, strokeOpacity: 1, zIndex: 1998, interactive: false });
                 p.lineAccent.options.set('strokeColor', '#A4E84A');
                 map.geoObjects.add(p.lineAccent);
             } else {
