@@ -176,6 +176,7 @@ function getUserLocSvg(azimuth = 0) {
 
 function updateUserMarkerRotation() {
     if (!APP._userMarkerEl || APP.lastAz === null || !APP.map) return;
+    if (APP.currentSpeed < APP.navConfig.SPEED_THRESHOLD) return;
     const arrow = APP._userMarkerEl.querySelector('#user-arrow');
     if (arrow) {
         const mapAz = (APP.map.azimuth || 0) * (180 / Math.PI);
