@@ -357,7 +357,7 @@ function initGeolocation() {
                     APP._currentDisplayAz = APP.lastAz;
                     APP.userMarker.update({ coordinates: [coords[1], coords[0]] });
                     const camera = { tilt: APP.lastTilt, duration: 0 };
-                    if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
+                    if (APP.lastAz) {
                         camera.azimuth = -APP.lastAz * Math.PI / 180;
                     }
                     APP.map.update({
@@ -387,7 +387,7 @@ function toggleAutoCenter() {
     }
     if (APP.autoCenter && APP.lastPos) {
         const camera = { tilt: APP.lastTilt, duration: 0 };
-        if (APP.currentSpeed >= APP.navConfig.SPEED_THRESHOLD) {
+        if (APP.lastAz) {
             camera.azimuth = -APP.lastAz * Math.PI / 180;
         }
         APP.map.update({
