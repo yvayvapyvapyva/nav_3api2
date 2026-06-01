@@ -340,14 +340,7 @@ function initGeolocation() {
             if (APP.lastPos && speed >= APP.navConfig.SPEED_THRESHOLD) {
                 const rawAz = calcAzimuth(APP.lastPos, coords);
                 APP.rawAz = rawAz;
-                if (APP.lastAz === 0) {
-                    APP.lastAz = rawAz;
-                } else {
-                    let d = rawAz - APP.lastAz;
-                    if (d > 180) d -= 360;
-                    if (d < -180) d += 360;
-                    APP.lastAz = ((APP.lastAz + d * 0.35) % 360 + 360) % 360;
-                }
+                APP.lastAz = rawAz;
             }
             APP.lastPos = coords;
             APP.currentSpeed = speed;
