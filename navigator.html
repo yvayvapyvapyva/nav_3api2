@@ -126,7 +126,7 @@
 
 <script>
 const APP = {
-    map: null, userMarker: null, lastPos: null, lastAz: 0, lastTilt: 0, autoCenter: false, currentSpeed: 0,
+    map: null, userMarker: null, lastPos: null, lastAz: 0, rawAz: 0, lastTilt: 0, autoCenter: false, currentSpeed: 0,
     navPoints: [], navCurrentIndex: 0, navPreviewIndex: -1,
     navAudio: new Audio(),
     navConfig: { TRIGGER_DIST: 25, AZ_TOLERANCE: 45, SPEED_THRESHOLD: 2 },
@@ -339,6 +339,7 @@ function initGeolocation() {
             const speed = (pos.coords.speed || 0) * 3.6;
             if (APP.lastPos && speed >= APP.navConfig.SPEED_THRESHOLD) {
                 const rawAz = calcAzimuth(APP.lastPos, coords);
+                APP.rawAz = rawAz;
                 if (APP.lastAz === 0) {
                     APP.lastAz = rawAz;
                 } else {
@@ -727,7 +728,7 @@ function navCheckTriggers() {
     if (APP.navCurrentIndex < 0 || !APP.lastPos || !APP.navPoints[APP.navCurrentIndex]) return;
     const t = APP.navPoints[APP.navCurrentIndex];
     const d = getGeoDistance(APP.lastPos, [t.lat, t.lon]);
-    let ad = Math.abs(APP.lastAz - t.az) % 360;
+    let ad = Math.abs(APP.rawAz - t.az) % 360;
     if (ad > 180) ad = 360 - ad;
     updateHudDist(d, ad);
 
