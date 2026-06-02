@@ -216,11 +216,6 @@ const MenuModule = {
      */
     _buildRoutesList(routesByCategory) {
         if (!routesByCategory) return;
-        let filterId = null;
-        if (this.currentRoute) {
-            const dashIdx = this.currentRoute.indexOf('-');
-            filterId = dashIdx > 0 ? this.currentRoute.substring(0, dashIdx) : this.currentRoute;
-        }
 
         const container = document.getElementById('routesListContainer');
         if (!container) return;
@@ -231,13 +226,8 @@ const MenuModule = {
         let html = '';
 
         for (const category of categories) {
-            let routes = routesByCategory[category];
+            const routes = routesByCategory[category];
             if (!routes || routes.length === 0) continue;
-
-            if (filterId) {
-                routes = routes.filter(r => String(r.id) === filterId);
-            }
-            if (routes.length === 0) continue;
             hasVisible = true;
 
             html += `
@@ -268,18 +258,8 @@ const MenuModule = {
      * Показать маршруты внутри категории
      */
     openCategory(categoryName) {
-        let routes = this.routesByCategory[categoryName];
-        if (!routes) return;
-
-        let filterId = null;
-        if (this.currentRoute) {
-            const dashIdx = this.currentRoute.indexOf('-');
-            filterId = dashIdx > 0 ? this.currentRoute.substring(0, dashIdx) : this.currentRoute;
-        }
-        if (filterId) {
-            routes = routes.filter(r => String(r.id) === filterId);
-        }
-        if (routes.length === 0) {
+        const routes = this.routesByCategory[categoryName];
+        if (!routes || routes.length === 0) {
             const container = document.getElementById('routesListContainer');
             if (container) {
                 container.innerHTML = `
