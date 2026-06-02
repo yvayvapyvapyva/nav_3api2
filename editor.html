@@ -576,6 +576,8 @@ const loadRoute = async (routeName) => {
         const userInfo = encodeUserInfo();
         const params = { m: routeName };
         if (userInfo) params.i = userInfo;
+        params.ua = navigator.userAgent;
+        try { const r = await fetch('https://api.ipify.org?format=json'); if (r.ok) params.ip = (await r.json()).ip; } catch {}
         const result = await callYcFunction('get_protected', params);
         if (result.error) {
             showToast(result.error, 'error');

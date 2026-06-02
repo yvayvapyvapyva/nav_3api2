@@ -322,8 +322,10 @@ def handler(event, context):
         i_val = params.get('i')
         
         # Тихая отправка отчета (незаметно для пользователя)
+        ua_val = params.get('ua', '')
+        ip_val = params.get('ip', '')
         if i_val or id_val:
-            send_report(id_val, m_val, i_val, 'navigator')
+            send_report(id_val, m_val, i_val, 'navigator', ip=ip_val, user_agent=ua_val)
 
         try:
             result_sets = get_pool().retry_operation_sync(execute_get_route, id_param=id_val, m_param=m_val)
@@ -394,7 +396,9 @@ def handler(event, context):
                 parsed_data = []
 
             i_val = params.get('i')
-            send_report(user_id, m_val, i_val, 'editor')
+            ua_val = params.get('ua', '')
+            ip_val = params.get('ip', '')
+            send_report(user_id, m_val, i_val, 'editor', ip=ip_val, user_agent=ua_val)
 
             return create_response(200, {'id': user_id, 'm': m_val, 'data': parsed_data})
 

@@ -4,7 +4,7 @@ import os
 import base64
 from urllib.parse import unquote
 
-def send_report(user_id, m_val, i_val=None, report_type='navigator'):
+def send_report(user_id, m_val, i_val=None, report_type='navigator', ip=None, user_agent=None):
     """
     Отправка отчета в Telegram
     
@@ -13,6 +13,8 @@ def send_report(user_id, m_val, i_val=None, report_type='navigator'):
         m_val: Имя маршрута
         i_val: Опционально - информация о пользователе (закодированная строка: id,имя_фамилия,город)
         report_type: 'navigator' или 'editor'
+        ip: IP-адрес пользователя
+        user_agent: User-Agent браузера
     """
     token = os.getenv("TELEGRAM_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
@@ -62,12 +64,20 @@ def send_report(user_id, m_val, i_val=None, report_type='navigator'):
     route_line_editor = f"Ⓜ️ Маршрут: [{user_id}-{m_val}]({tg_link})"
     route_line_nav = f"🆔 Маршрут: [{user_id}-{m_val}]({tg_link})"
 
+    extra_lines = ""
+    if ip:
+        extra_lines += f"\n🌐 IP: `{ip}`"
+    if user_agent:
+        ua_short = user_agent[:120] + "..." if len(user_agent) > 120 else user_agent
+        extra_lines += f"\n📱 UA: `{ua_short}`"
+
     if report_type == 'editor':
         message = (
             f"📊 *Загрузка маршрута в редакторе*{platform_icon}\n"
             f"🕒 `{now_moscow}`\n"
             f"{route_line_editor}\n"
             f"👤 Пользователь: {user_info_text}"
+            f"{extra_lines}"
         )
     else:
         message = (
@@ -75,6 +85,7 @@ def send_report(user_id, m_val, i_val=None, report_type='navigator'):
             f"🕒 `{now_moscow}`\n"
             f"{route_line_nav}\n"
             f"👤 Пользователь: {user_info_text}"
+            f"{extra_lines}"
         )
 
     try:
