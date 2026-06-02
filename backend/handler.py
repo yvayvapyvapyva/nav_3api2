@@ -356,15 +356,8 @@ def handler(event, context):
     else:
         verified_user_id, err = verify_vk_signature(params)
 
-    # Для экшенов без подписи, но требующих id - используем параметр id из URL
-    if not verified_user_id and id_val:
-        if params.get('sign'):
-            pass
-        else:
-            verified_user_id = id_val
-
     # Если действие требует подписи (редактор) - проверяем обязательно
-    if action in ('list', 'save', 'delete', 'get_meta', 'save_meta'):
+    if action in ('list', 'save', 'delete', 'get_protected', 'get_meta', 'save_meta'):
         if not verified_user_id:
             error_msg = err or 'signature required'
             if platform == 'tg':
