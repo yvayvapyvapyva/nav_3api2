@@ -1,7 +1,6 @@
 import os
 import hmac
 import hashlib
-import base64
 import urllib.parse
 import ydb
 import ydb.iam
@@ -14,7 +13,6 @@ except ImportError:
 
 endpoint = os.getenv("YDB_ENDPOINT")
 database = os.getenv("YDB_DATABASE")
-VK_APP_SECRET = os.getenv("VK_APP_SECRET")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 pool = None
@@ -31,38 +29,6 @@ def get_pool():
         driver.wait(timeout=10)
         pool = ydb.SessionPool(driver)
     return pool
-
-
-def verify_vk_signature(params):
-    """Проверка криптографической подписи VK Mini Apps"""
-    if not VK_APP_SECRET:
-        return None, 'VK_APP_SECRET not configured'
-
-    sign = params.get('sign')
-    if not sign:
-        return None, 'sign parameter missing'
-
-    vk_params = {k: v for k, v in params.items() if k.startswith('vk_')}
-
-    sign_val = sign
-    sorted_params = sorted(vk_params.items(), key=lambda x: x[0])
-    data_string = '&'.join(f"{k}={v}" for k, v in sorted_params)
-
-    mac = hmac.new(
-        VK_APP_SECRET.encode('utf-8'),
-        data_string.encode('utf-8'),
-        hashlib.sha256
-    ).digest()
-
-    expected_b64url = base64.urlsafe_b64encode(mac).decode('utf-8').rstrip('=')
-
-    if not hmac.compare_digest(sign_val, expected_b64url):
-        return None, 'invalid_vk_signature'
-
-    uid = vk_params.get('vk_user_id')
-    if not uid:
-        return None, 'vk_user_id missing'
-    return uid, None
 
 
 def verify_tg_init_data(init_data):
@@ -355,18 +321,12 @@ def handler(event, context):
     if platform == 'tg':
         tg_init_data = params.get('tg_init_data', '')
         verified_user_id, err = verify_tg_init_data(tg_init_data)
-    else:
-        verified_user_id, err = verify_vk_signature(params)
-
-    # Если действие требует подписи (редактор) - проверяем обязательно
-    if action in ('list', 'save', 'delete', 'get_protected', 'get_meta', 'save_meta'):
         if not verified_user_id:
-            error_msg = err or 'signature required'
-            if platform == 'tg':
-                return create_response(401, {'error': 'invalid_tg_signature', 'message': error_msg})
-            return create_response(401, {'error': 'invalid_vk_signature', 'message': error_msg})
+            return create_response(401, {'error': 'invalid_tg_signature', 'message': err})
+    else:
+        verified_user_id = params.get('id')
 
-    user_id = verified_user_id or id_val
+    user_id = verified_user_id
 
     try:
         # Список маршрутов пользователя

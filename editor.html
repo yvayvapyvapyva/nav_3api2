@@ -99,7 +99,6 @@ if (typeof vkBridge !== 'undefined') VK.init();
 TG.init();
 
 const YC_FUNCTION_URL = 'https://functions.yandexcloud.net/d4e6qbc1mm9j44h0na3n';
-const VK_PARAMS = new URLSearchParams(window.location.search);
 const TG_BOT_LINK = 'https://t.me/E_ia_bot?startapp=m=';
 
 const TG_ACTIVE = typeof Telegram !== 'undefined' && Telegram.WebApp && !!Telegram.WebApp.initData;
@@ -156,12 +155,11 @@ document.addEventListener('pointerdown', (e) => {
 async function callYcFunction(action, params = {}, bodyData = null) {
     const url = new URL(YC_FUNCTION_URL);
     url.searchParams.set('action', action);
-    url.searchParams.set('p', TG_ACTIVE ? 'tg' : (typeof vkBridge !== 'undefined' ? 'vk' : 'unknown'));
-    VK_PARAMS.forEach((v, k) => url.searchParams.set(k, v));
+    url.searchParams.set('p', TG_ACTIVE ? 'tg' : 'vk');
+    url.searchParams.set('id', window.USER_ID);
     if (TG_ACTIVE) {
         url.searchParams.set('tg_init_data', Telegram.WebApp.initData);
     }
-    url.searchParams.set('id', window.USER_ID);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     
     const options = {
@@ -350,17 +348,27 @@ if (typeof vkBridge !== 'undefined') {
 }
 
 ymaps.ready(async () => {
-    if (!TG_ACTIVE && typeof vkBridge === 'undefined') {
-        $('welcomeScreen').innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:60px 40px;text-align:center;"><span style="font-size:52px">🔒</span><div style="font-size:20px;font-weight:700;color:#fff;">Доступ запрещён</div><div style="font-size:15px;color:rgba(255,255,255,0.55);line-height:1.5;">Редактор работает только в приложениях VK и Telegram.<br>Откройте через мини-приложение.</div></div>';
-        return;
-    }
-
-    // Ждём загрузки данных пользователя VK (до 2 секунд)
-    if (typeof vkBridge !== 'undefined' && !TG_ACTIVE) {
-        for(let i = 0; i < 20 && !window.vkUser; i++) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+    if (!TG_ACTIVE) {
+        let isVk = false;
+        if (typeof vkBridge !== 'undefined') {
+            try {
+                const info = await Promise.race([
+                    vkBridge.send('VKWebAppGetUserInfo'),
+                    new Promise((_, reject) => setTimeout(() => reject(), 1500))
+                ]);
+                if (info?.id) {
+                    isVk = true;
+                    window.vkUser = info;
+                    window.USER_ID = String(info.id);
+                    window.USER_NAME = info.first_name + (info.last_name ? " " + info.last_name : "");
+                    window.USER_UNAME = info.screen_name ? `vk.com/${info.screen_name}` : "";
+                }
+            } catch (e) {}
         }
-        if (!window.USER_ID) window.USER_ID = VK.getId();
+        if (!isVk) {
+            $('welcomeScreen').innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:60px 40px;text-align:center;"><span style="font-size:52px">🔒</span><div style="font-size:20px;font-weight:700;color:#fff;">Доступ запрещён</div><div style="font-size:15px;color:rgba(255,255,255,0.55);line-height:1.5;">Редактор работает только в приложениях VK и Telegram.<br>Откройте через мини-приложение.</div></div>';
+            return;
+        }
     }
     
     const userId = window.USER_ID;
