@@ -588,7 +588,7 @@ function updateHud() {
         let ad = Math.abs(APP.lastAz - t.az) % 360;
         if (ad > 180) ad = 360 - ad;
         $('hudCmdDist').textContent = formatDistance(d);
-        $('hudCmdDist').classList.toggle('in-range', d <= APP.navConfig.TRIGGER_DIST && ad <= APP.navConfig.AZ_TOLERANCE);
+        $('hudCmdDist').classList.toggle('in-range', d < 50 && ad <= APP.navConfig.AZ_TOLERANCE);
     } else {
         $('hudCmdDist').textContent = '---';
         $('hudCmdDist').classList.remove('in-range');
@@ -617,7 +617,7 @@ function formatDistance(d) {
 
 function updateHudDist(d, ad) {
     $('hudCmdDist').textContent = formatDistance(d);
-    $('hudCmdDist').classList.toggle('in-range', d <= APP.navConfig.TRIGGER_DIST && ad <= APP.navConfig.AZ_TOLERANCE);
+    $('hudCmdDist').classList.toggle('in-range', d < 50 && ad <= APP.navConfig.AZ_TOLERANCE);
 }
 
 function showPreview(i) {
@@ -640,7 +640,7 @@ function updateCurrentPointHud() {
         let ad = Math.abs(APP.lastAz - t.az) % 360;
         if (ad > 180) ad = 360 - ad;
         $('hudCmdDist').textContent = formatDistance(d);
-        $('hudCmdDist').classList.toggle('in-range', d <= APP.navConfig.TRIGGER_DIST && ad <= APP.navConfig.AZ_TOLERANCE);
+        $('hudCmdDist').classList.toggle('in-range', d < 50 && ad <= APP.navConfig.AZ_TOLERANCE);
     }
 }
 
