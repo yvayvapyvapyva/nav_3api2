@@ -236,7 +236,6 @@ h1{font-size:22px;font-weight:700;margin-bottom:4px}
 
 <div class="toolbar">
   <button class="btn btn-primary" onclick="saveConfig()">💾 Сохранить config.js</button>
-  <button class="btn btn-small" onclick="refreshAudioStatus()">🔄 Проверить аудио</button>
 
   <span style="flex:1"></span>
   <button class="btn btn-small" onclick="addCategory()" style="background:rgba(255,255,255,.08);color:#fff">➕ Категория</button>
